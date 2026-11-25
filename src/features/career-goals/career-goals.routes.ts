@@ -31,6 +31,7 @@ careerGoalsRoutes.openapi(createRoute({
   responses: {
     200: { description: "Career goals", content: { "application/json": { schema: goalsResponse } } },
     401: { description: "Authentication required", content: { "application/json": { schema: errorResponse } } },
+    403: { description: "Account role is not enabled for this MVP", content: { "application/json": { schema: errorResponse } } },
     503: { description: "Authentication is not configured", content: { "application/json": { schema: errorResponse } } },
   },
 }), async (c) => {
@@ -51,6 +52,7 @@ careerGoalsRoutes.openapi(createRoute({
   responses: {
     200: { description: "Career goal deleted", content: { "application/json": { schema: z.object({ success: z.literal(true), data: z.object({ id: z.string().uuid() }) }) } } },
     401: { description: "Authentication required", content: { "application/json": { schema: errorResponse } } },
+    403: { description: "Account role is not enabled for this MVP", content: { "application/json": { schema: errorResponse } } },
     404: { description: "Career goal not found", content: { "application/json": { schema: errorResponse } } },
     409: { description: "Primary goal must be replaced through PUT before deletion", content: { "application/json": { schema: errorResponse } } },
     503: { description: "Authentication is not configured", content: { "application/json": { schema: errorResponse } } },
@@ -77,6 +79,7 @@ careerGoalsRoutes.openapi(createRoute({
     200: { description: "Career goals replaced", content: { "application/json": { schema: goalsResponse } } },
     400: { description: "Invalid career goals", content: { "application/json": { schema: errorResponse } } },
     401: { description: "Authentication required", content: { "application/json": { schema: errorResponse } } },
+    403: { description: "Account role is not enabled for this MVP", content: { "application/json": { schema: errorResponse } } },
     503: { description: "Authentication is not configured", content: { "application/json": { schema: errorResponse } } },
   },
 }), async (c) => {

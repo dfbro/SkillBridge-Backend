@@ -118,6 +118,7 @@ progressionRoutes.openapi(createRoute({
   responses: {
     200: { description: "Learning preferences", content: { "application/json": { schema: preferencesResponseSchema } } },
     401: { description: "Authentication required", content: { "application/json": { schema: errorResponse } } },
+    403: { description: "Account role is not enabled for this MVP", content: { "application/json": { schema: errorResponse } } },
     503: { description: "Authentication is not configured", content: { "application/json": { schema: errorResponse } } },
   },
 }), async (c) => {
@@ -143,6 +144,7 @@ progressionRoutes.openapi(createRoute({
     200: { description: "Learning preferences updated", content: { "application/json": { schema: preferencesResponseSchema } } },
     400: { description: "Invalid preference values", content: { "application/json": { schema: errorResponse } } },
     401: { description: "Authentication required", content: { "application/json": { schema: errorResponse } } },
+    403: { description: "Account role is not enabled for this MVP", content: { "application/json": { schema: errorResponse } } },
     503: { description: "Authentication is not configured", content: { "application/json": { schema: errorResponse } } },
   },
 }), async (c) => {
@@ -180,6 +182,7 @@ progressionRoutes.openapi(createRoute({
   responses: {
     200: { description: "Learning progress snapshot", content: { "application/json": { schema: progressResponseSchema } } },
     401: { description: "Authentication required", content: { "application/json": { schema: errorResponse } } },
+    403: { description: "Account role is not enabled for this MVP", content: { "application/json": { schema: errorResponse } } },
     503: { description: "Authentication is not configured", content: { "application/json": { schema: errorResponse } } },
   },
 }), async (c) => {
@@ -225,6 +228,7 @@ progressionRoutes.openapi(createRoute({
   responses: {
     200: { description: "Daily activity history", content: { "application/json": { schema: activityResponseSchema } } },
     401: { description: "Authentication required", content: { "application/json": { schema: errorResponse } } },
+    403: { description: "Account role is not enabled for this MVP", content: { "application/json": { schema: errorResponse } } },
     503: { description: "Authentication is not configured", content: { "application/json": { schema: errorResponse } } },
   },
 }), async (c) => {
@@ -253,6 +257,7 @@ progressionRoutes.openapi(createRoute({
   responses: {
     200: { description: "Achievement catalogue and unlock state", content: { "application/json": { schema: achievementResponseSchema } } },
     401: { description: "Authentication required", content: { "application/json": { schema: errorResponse } } },
+    403: { description: "Account role is not enabled for this MVP", content: { "application/json": { schema: errorResponse } } },
     503: { description: "Authentication is not configured", content: { "application/json": { schema: errorResponse } } },
   },
 }), async (c) => {

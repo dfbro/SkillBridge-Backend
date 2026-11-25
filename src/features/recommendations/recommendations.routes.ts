@@ -37,6 +37,7 @@ recommendationsRoutes.openapi(createRoute({
   responses: {
     200: { description: "Explainable published mission recommendations", content: { "application/json": { schema: recommendationResponseSchema } } },
     401: { description: "Authentication required", content: { "application/json": { schema: errorResponse } } },
+    403: { description: "Account role is not enabled for this MVP", content: { "application/json": { schema: errorResponse } } },
     503: { description: "Authentication is not configured", content: { "application/json": { schema: errorResponse } } },
   },
 }), async (c) => {

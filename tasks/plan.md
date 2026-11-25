@@ -50,7 +50,7 @@ Di dalam setiap feature, file cukup ditambahkan saat dibutuhkan—misalnya `*.ro
 
 `Cloudflare Worker → Hono middleware → OpenAPI/Zod boundary → feature route → service/use-case → repository → Drizzle/PostgreSQL`.
 
-Identitas berasal dari token Supabase yang telah diverifikasi di backend. `user_id`, role, skor assessment, status final, atau nominal XP dari body client tidak pernah menjadi sumber kebenaran. Frontend hanya berkomunikasi melalui REST API; frontend tidak mengakses tabel produk secara langsung.
+Identitas berasal dari token Supabase yang telah diverifikasi di backend. Untuk MVP, satu-satunya role aplikasi yang diterima adalah `student`, dibaca dari claim server-controlled `app_metadata.role`; role dari body atau `user_metadata` tidak dipercaya. Claim role eksplisit yang tidak didukung ditolak dengan 403. `user_id`, skor assessment, status final, atau nominal XP dari body client tidak pernah menjadi sumber kebenaran. Frontend hanya berkomunikasi melalui REST API; frontend tidak mengakses tabel produk secara langsung.
 
 ## 3. Database dan runtime lokal
 
@@ -79,9 +79,9 @@ Referensi implementasi resmi:
 
 ### Supabase boundaries
 
-- Supabase Auth menjadi identity provider. Backend menerima Bearer access token dan memverifikasi token sesuai signing algorithm project yang benar-benar dipakai. Strategi JWKS vs Auth `/user` endpoint baru dipastikan setelah Supabase project tersedia.
+- Supabase Auth menjadi identity provider. Backend menerima Bearer access token dan memverifikasi token sesuai signing algorithm project yang benar-benar dipakai. Strategi JWKS vs Auth `/user` endpoint baru dipastikan setelah Supabase project tersedia. Role MVP hanya `student`; cara pendaftaran/kelayakan akun siswa masih TBD.
 - Supabase PostgreSQL menjadi source of truth. Migration dibuat dan diuji terhadap PostgreSQL lokal terlebih dahulu; migration production dijalankan terpisah setelah project disiapkan.
-- Supabase Storage tidak diaktifkan pada slice awal karena format dan batas file masih open decision. Rekomendasi awal adalah text-first submission.
+- Supabase Storage dan attachment tidak masuk scope MVP: submission disetujui text-only dan memakai satu field `content`.
 - Jangan menggunakan `service_role`/superuser untuk menganggap RLS otomatis melindungi user. Backend wajib melakukan ownership authorization. Pilih runtime DB role terbatas tanpa `BYPASSRLS`; propagasi user context untuk RLS harus dirancang dan diuji secara eksplisit. Migration role dan runtime role dipisahkan.
 
 ## 4. API contract untuk frontend
@@ -91,9 +91,11 @@ Referensi implementasi resmi:
 - `GET /openapi.json` menyediakan spesifikasi yang dihasilkan dari route definitions, bukan dokumen yang ditulis manual terpisah. Setelah kontrak awal disepakati, sediakan export artefak OpenAPI statis untuk handoff/versi frontend bila diperlukan.
 - Selaraskan response envelope sebelum feature terintegrasi pertama. Usulan TDD: sukses `{ success, data, message }`; error `{ success, error: { code, message, details } }`. Karena dokumen menandainya sebagai usulan, ini perlu disepakati dengan Frontend Lead, bukan dianggap final.
 - Gunakan UUID untuk resource ID, ISO 8601 UTC untuk timestamp, dan `limit`/`cursor` untuk koleksi yang memerlukan pagination.
-- Endpoint awal mengikuti TDD: `/api/v1/me`, `/api/v1/me/career-goals`, `/api/v1/missions`, `/api/v1/missions/:missionId`, submission, assessment, dashboard, serta recommendations. Reviewer endpoints tidak dibuka sampai role dan policy disetujui.
+- Endpoint awal mengikuti TDD: `/api/v1/me`, `/api/v1/me/career-goals`, `/api/v1/missions`, `/api/v1/missions/:missionId`, submission, assessment, dashboard, serta recommendations. Semua endpoint aplikasi saat ini beroperasi untuk `student`; tidak ada reviewer/admin endpoint. Mandatory human review sudah diputuskan, tetapi identitas, jalur otorisasi, assignment dan audit reviewer masih TBD.
 
 OpenAPI adalah artefak handoff bagi frontend: developer frontend dapat mengambil `/openapi.json` untuk melihat endpoint, method, auth, request schema, response schema, dan error contract sebelum/selama implementasi UI. Perubahan kontrak harus melalui review bersama Frontend Lead.
+
+**Keputusan integrasi frontend:** backend OpenAPI menjadi satu-satunya sumber kontrak API. Frontend mengikuti REST contract yang sudah tersedia dan menggunakan tipe/client yang dihasilkan dari OpenAPI bila dibutuhkan; jangan memelihara request/response type manual yang menyimpang atau mengakses PostgreSQL/Supabase langsung. Scope UI MVP hanya alur student. Framework, lokasi repository frontend, strategi code generation dan response-envelope sign-off tetap **TBD** sampai repository/Frontend Lead tersedia; jangan menambah stack frontend dari asumsi.
 
 ## 5. Model data MVP
 
@@ -103,8 +105,8 @@ Model logis mengikuti TDD; nama kolom, constraint final dan rubric policy harus 
 | --- | --- | --- |
 | Profiles | `profiles`, `career_goals` | Profile ditautkan ke `auth.users.id`; simpan atribut minimum. |
 | Missions | `missions`, `rubric_versions`, `rubric_criteria` | Hanya mission `published` dapat dilihat/dikerjakan; rubric version immutable untuk penilaian lama. |
-| Submissions | `submissions`, `submission_assets` (opsional) | Mulai text-first; submission mengunci `rubric_version_id`. |
-| Assessments | `assessment_runs`, `assessment_criterion_results`, `assessment_reviews` (sesuai review policy) | Pisahkan AI draft/provisional dari hasil yang telah difinalisasi reviewer. |
+| Submissions | `submissions` | MVP text-only; hanya `content` string dan `rubric_version_id`, tanpa asset table atau upload. |
+| Assessments | `assessment_runs`, `assessment_criterion_results`, `assessment_reviews` (jika diperlukan setelah desain) | Human review wajib sebelum status final; hasil otomatis tetap draft/provisional sampai reviewer yang berwenang menyetujui. Reviewer access path belum ditetapkan dan tidak boleh disamakan dengan role produk `student`. |
 | Gamification | `xp_events`, `learning_preferences`, `daily_activities`, `user_progress`, `user_achievements` | XP ledger backend-only/idempotent; daily activity memakai timezone pilihan user; level/achievement terpisah dari skor rubric. Reward dan milestone default tetap provisional hingga disetujui product owner. |
 
 Constraint/index awal dari TDD: unique `missions.slug`, unique `(mission_id, version)`, unique `(rubric_version_id, criterion_key)`, index riwayat submission per user, index status mission untuk reviewer, index assessment history, index XP history, score range constraint, serta idempotency/unique constraint untuk XP event.
@@ -131,8 +133,8 @@ Setiap slice harus meninggalkan API yang berjalan dan kontrak OpenAPI yang dapat
 
 ### Phase 2 — Practice & Assess
 
-7. Text-first submission: submit mission, own submission history/detail, status dan ownership.
-8. Assessment lifecycle: run/status, rubric criterion results, provisional vs finalized, dan human review hanya setelah role/policy diputuskan.
+7. Text-only submission: submit mission, own submission history/detail, status dan ownership. File/image/video attachment berada di luar MVP.
+8. Assessment lifecycle: run/status, rubric criterion results, provisional vs finalized. Human review wajib sebelum finalisasi; processor, rubric dan jalur akses reviewer harus disepakati/diimplementasikan terlebih dahulu.
 9. Groq adapter untuk AI feedback terstruktur sebagai fitur lanjutan/should: output divalidasi Zod + domain rubric, failure/rate-limit/timeout tidak menghasilkan skor palsu, dan data pribadi diminimalkan.
 
 **Checkpoint:** submission tetap tersimpan bila AI gagal; hasil AI invalid ditolak; skor belum final tidak disajikan sebagai final; akses User A ke submission User B ditolak.
@@ -191,9 +193,9 @@ Hono composition + shared error/auth context + OpenAPI conventions
 | Local Hyperdrive tidak memakai pooling/cache | Hasil lokal tidak mewakili pooling Cloudflare | Uji query dan Worker behavior lokal; lakukan smoke test Hyperdrive staging saat Supabase tersedia. |
 | `auth.users` tidak ada di PostgreSQL lokal biasa | FK profiles tidak dapat langsung dimigrasikan | Gunakan fixture schema lokal non-production; jangan ship fixture tersebut sebagai migration Supabase. |
 | DB role melewati RLS | Data antar siswa dapat bocor | Least privilege, backend ownership checks, explicit RLS design dan cross-user tests. |
-| Role reviewer/admin belum final | Endpoint reviewer berisiko membuka hak akses yang belum disetujui | Jangan expose reviewer endpoint sebelum policy disepakati. |
-| Rubric, score range, dan human review belum final | Skema/hasil assessment dapat berubah | Versioning rubric; jangan mengunci bobot/ambang atau menandai AI sebagai final secara sepihak. |
-| Submission file policy belum final | Storage menambah risiko/kompleksitas privasi | Mulai text-only; tangguhkan Storage dan asset table. |
+| Reviewer tidak termasuk role produk MVP | Mandatory review belum dapat dijalankan lewat API siswa tanpa jalur operasional terpisah | Jangan expose reviewer endpoint; tentukan identitas, otorisasi, assignment dan audit reviewer sebelum assessment processing/finalization. |
+| Rubric dan score range belum final | Skema/hasil assessment dapat berubah | Versioning rubric; jangan mengunci bobot/ambang atau menandai AI sebagai final secara sepihak. |
+| Submission file policy | Upload menambah storage dan risiko privasi | MVP telah diputuskan text-only; simpan upload sebagai scope di luar MVP. |
 | Pengguna mungkin berusia di bawah 18 tahun | Risiko privasi dan persetujuan | Data minimization, no public portfolio, retention/deletion dan consent review sebelum pilot. |
 | Response envelope belum disepakati frontend | Integrasi API dapat berubah | Review kontrak dan OpenAPI dengan Frontend Lead sebelum feature slices. |
 
@@ -201,14 +203,16 @@ Hono composition + shared error/auth context + OpenAPI conventions
 
 Keputusan ini tidak menghalangi foundation lokal, tetapi harus dibahas sebelum feature terkait dibuka:
 
-1. Apakah success/error envelope usulan TDD diterima Frontend Lead?
-2. Apakah fase MVP memakai role `student` saja, atau sudah membutuhkan `reviewer`? Siapa reviewer dan bagaimana assignment/authorization-nya?
-3. Apakah submission MVP text-only? Rekomendasi awal: ya.
-4. Apa kriteria, skala dan bobot rubric; kapan hasil boleh berstatus final; apakah semua hasil AI wajib ditinjau manusia?
-5. Model Groq apa yang akan dipakai dan apakah output terstruktur didukung model tersebut?
-6. Kapan dan berapa XP diberikan; apa idempotency event-nya?
-7. Apa retention/deletion policy untuk data siswa dan output misi?
-8. Setelah Supabase dibuat: JWT signing algorithm, DB runtime role, RLS context strategy, Hyperdrive credential dan environment.
+1. **TBD:** Apakah success/error envelope usulan TDD diterima Frontend Lead?
+2. **APPROVED:** Role produk MVP hanya `student`. Tidak ada role produk `reviewer` atau `admin`; identitas dan jalur otorisasi manusia yang melakukan review tetap **TBD**. Pendaftaran/kelayakan akun siswa juga **TBD**.
+3. **APPROVED:** Submission MVP text-only. Attachment, upload dan Supabase Storage berada di luar scope.
+4. **APPROVED:** Semua assessment wajib melalui human review sebelum finalisasi. **TBD:** siapa reviewer, bagaimana assignment dan otorisasinya, audit trail, SLA/antrian review, serta apakah feedback provisional boleh terlihat oleh siswa.
+5. **TBD:** Kriteria, skala, bobot dan versi rubric; kapan hasil boleh berstatus final.
+6. **TBD:** Model Groq, structured-output contract, batas konteks dan kebijakan pengiriman data siswa.
+7. **TBD:** Synchronous vs background processor/queue, retry, timeout, idempotency dan operational monitoring.
+8. **TBD:** Kapan dan berapa XP diberikan; goal bounds, level thresholds, streak bonus/grace dan achievement milestones.
+9. **TBD:** Retention/deletion policy untuk data siswa dan output misi, serta persetujuan/privasi peserta di bawah umur.
+10. **TBD setelah Supabase tersedia:** JWT signing algorithm, assignment `app_metadata.role`, DB runtime role, RLS context strategy, Hyperdrive credentials dan environment.
 
 ## 10. Definition of Done untuk setiap slice
 
@@ -228,6 +232,8 @@ Keputusan ini tidak menghalangi foundation lokal, tetapi harus dibahas sebelum f
 - Dashboard siswa mengagregasi status/riwayat source-of-truth; rekomendasi misi menggunakan overlap keyword tujuan karier dan fallback katalog published yang belum dicoba, dengan alasan transparan.
 - Dashboard/recommendation implementation intentionally exposes only assessment status/finality flags; assessment scores and feedback remain in the following assessment slice after policy approval.
 - Owner-scoped submission detail and assessment request/status endpoints now record queued runs only; no AI processing or finalization is implied until a processor and scoring/reviewer policy exist.
+- MVP product decisions (2026-11-25): only `student` role, mandatory human review before assessment finalization, and text-only submissions. Student role is allowlisted from verified Supabase `app_metadata`; unsupported explicit roles receive 403.
+- Mandatory review does not create a `reviewer` product role. A separate trusted reviewer identity/access path is an explicit blocker for assessment processing and finalization; queued assessment requests remain request-only until that path, rubric and processor are approved.
 - Learning progression menggunakan policy provisional. XP rewards dan achievement unlock tetap nonaktif sampai product owner menyetujui nilai dan status policy.
 - Dashboard/recommendations serta assessment read/status masih merupakan slice berikutnya.
 - Groq feedback, reviewer finalization, remote Supabase auth/JWKS, production RLS context, Hyperdrive staging, dan deployment menunggu keputusan produk atau kredensial Supabase.

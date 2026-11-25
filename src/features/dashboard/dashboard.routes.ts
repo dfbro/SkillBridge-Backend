@@ -56,6 +56,7 @@ dashboardRoutes.openapi(createRoute({
   responses: {
     200: { description: "Student dashboard", content: { "application/json": { schema: dashboardResponseSchema } } },
     401: { description: "Authentication required", content: { "application/json": { schema: errorResponse } } },
+    403: { description: "Account role is not enabled for this MVP", content: { "application/json": { schema: errorResponse } } },
     503: { description: "Authentication is not configured", content: { "application/json": { schema: errorResponse } } },
   },
 }), async (c) => {

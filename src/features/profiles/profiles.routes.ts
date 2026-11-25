@@ -20,6 +20,7 @@ const getMeRoute = createRoute({
   responses: {
     200: { description: "Profile retrieved", content: { "application/json": { schema: profileResponseSchema } } },
     401: { description: "Missing or invalid access token", content: { "application/json": { schema: unauthorizedSchema } } },
+    403: { description: "Account role is not enabled for this MVP", content: { "application/json": { schema: unauthorizedSchema } } },
     503: { description: "Supabase authentication is not configured", content: { "application/json": { schema: unauthorizedSchema } } },
   },
 });
@@ -54,6 +55,7 @@ const patchMeRoute = createRoute({
     200: { description: "Profile updated", content: { "application/json": { schema: profileResponseSchema } } },
     400: { description: "Invalid request body", content: { "application/json": { schema: unauthorizedSchema } } },
     401: { description: "Missing or invalid access token", content: { "application/json": { schema: unauthorizedSchema } } },
+    403: { description: "Account role is not enabled for this MVP", content: { "application/json": { schema: unauthorizedSchema } } },
     503: { description: "Supabase authentication is not configured", content: { "application/json": { schema: unauthorizedSchema } } },
   },
 });

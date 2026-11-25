@@ -30,4 +30,19 @@ describe("generated OpenAPI contract", () => {
     const document = getOpenApiDocument();
     expect(document.components?.securitySchemes).toHaveProperty("BearerAuth");
   });
+
+  it("documents the student-only role rejection on protected routes", () => {
+    const document = getOpenApiDocument();
+    const protectedOperations = [
+      document.paths["/api/v1/me"]?.get,
+      document.paths["/api/v1/me"]?.patch,
+      document.paths["/api/v1/missions/{missionId}/submissions"]?.post,
+      document.paths["/api/v1/submissions/{submissionId}/assessment"]?.post,
+    ];
+
+    for (const operation of protectedOperations) {
+      expect(operation?.responses).toHaveProperty("403");
+    }
+    expect(document.paths["/api/v1/progression/policy"]?.get?.responses).not.toHaveProperty("403");
+  });
 });
