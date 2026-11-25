@@ -82,7 +82,23 @@ Supabase Auth routes intentionally return `503 AUTH_NOT_CONFIGURED` until `SUPAB
 | GET | `/api/v1/missions/{missionId}` | Public | Published mission and rubric detail |
 | POST | `/api/v1/missions/{missionId}/submissions` | Bearer JWT | Submit text work for a published mission |
 | GET | `/api/v1/me/submissions` | Bearer JWT | List own submissions |
+| GET | `/api/v1/me/learning-preferences` | Bearer JWT | Read own daily XP goal and timezone |
+| PUT | `/api/v1/me/learning-preferences` | Bearer JWT | Update own daily XP goal and IANA timezone |
+| GET | `/api/v1/me/progress` | Bearer JWT | Read XP, level, current/longest streak and daily goal progress |
+| GET | `/api/v1/me/activity` | Bearer JWT | Read up to 90 days of local-date practice history |
+| GET | `/api/v1/me/achievements` | Bearer JWT | Read available and unlocked achievement states |
+| GET | `/api/v1/progression/policy` | Public | Explain proposed and active XP/level/achievement rules |
 | GET | `/openapi.json` | Public | Generated OpenAPI 3.0 document |
+
+## Learning progression policy
+
+The progression slice records practice activity from successful submission creation. Activity dates are calculated using each learner's IANA timezone; streaks are based on consecutive local calendar days, and the provisional policy allows one grace day after the last recorded practice. Multiple submissions on one local day count as one streak day. Client requests cannot award XP.
+
+`GET /api/v1/progression/policy` exposes the current policy. The code defaults are **provisional**: a 20 XP daily goal, suggested level thresholds `[0, 100, 250, 500, 1000]`, one streak grace day, suggested achievement milestones, and a proposed 10 XP reward for a new submission. While the policy status is `provisional`, the effective reward is zero and achievements are not unlocked. This prevents an unapproved product rule from granting points. Set `PROGRESSION_POLICY_JSON` through the deployment environment only after product sign-off; the JSON must use `status: "approved"` and can override goal bounds, streak grace, thresholds, reward map and achievement rules. XP is a motivation metric and never modifies rubric or competency scores.
+
+Events recorded while the policy is provisional remain zero-point events after approval; old submissions are not credited retroactively. Any backfill would require a separately reviewed policy and idempotency design.
+
+The local integration test for event idempotency can run with `TEST_DATABASE_URL` pointing at the development PostgreSQL database. It verifies that retrying the same event does not double-credit XP or daily practice counts.
 
 ## OpenAPI contract for frontend
 
@@ -126,7 +142,7 @@ npm run openapi:export
 - `src/features/` — feature-owned routes, schemas, services/repositories and tests.
 - `src/shared/` — cross-feature auth, database and HTTP infrastructure only.
 
-This is an incremental MVP foundation. Assessment/reviewer workflows, Groq feedback, XP ledger, dashboard and recommendations remain future slices; they are not represented as implemented API routes yet.
+This is an incremental MVP foundation. Assessment/reviewer workflows, Groq feedback, dashboard and recommendations remain future slices; the learning progression slice is implemented with provisional reward policy pending product sign-off.
 
 ## GitHub CLI
 

@@ -130,12 +130,15 @@
 ### Task 3.1 — XP event ledger
 
 - [x] Tambahkan `xp_events` dan source/idempotency constraint pada schema.
-- [ ] Implementasikan pemberian XP hanya dari event backend yang diizinkan.
-- [ ] Hitung level dari aturan terkonfigurasi; jangan satukan XP dan competency score.
+- [x] Implementasikan pencatatan XP dari event submission di dalam transaksi backend; retry event yang sama tidak menggandakan poin/aktivitas.
+- [x] Tambahkan daily XP goal, timezone IANA per user, daily activity, current/longest streak, level thresholds dan achievement unlocks.
+- [x] Expose GET/PUT preferences, GET progress, GET activity, GET achievements, dan GET policy melalui Zod/OpenAPI.
+- [ ] Dapatkan product sign-off untuk nominal reward, thresholds, daily goal bounds dan achievement milestones sebelum mengubah status policy menjadi `approved`.
 
-**Acceptance:** request client tidak dapat menaikkan XP; event retry tidak menggandakan XP.
-**Verification:** unit tests kalkulasi level, duplicate event integration tests dan transaction tests.
-**Dependencies:** Task 2.1/2.2 dan keputusan aturan XP. **Scope:** Medium.
+**Acceptance:** request client tidak dapat menaikkan XP; aktivitas submission dicatat backend-only; event retry idempotent; streak memakai timezone user; nilai XP/level tidak digabungkan dengan skor kompetensi. Reward efektif 0 sampai policy disetujui.
+**Verification:** timezone/streak/level/policy tests; PostgreSQL integration tests membuktikan idempotensi dan provisional zero-reward; OpenAPI route coverage. 23 tests pass, migration generate/apply, audit and Worker dry-run pass. **Scope:** Medium.
+
+**Current implementation:** `GET /api/v1/progression/policy`, `GET/PUT /api/v1/me/learning-preferences`, `GET /api/v1/me/progress`, `GET /api/v1/me/activity`, and `GET /api/v1/me/achievements`. Policy JSON can be supplied through `PROGRESSION_POLICY_JSON`; default reward values are provisional and effective XP is 0 until approved. Activity rows are created from successful submission events in the same transaction as the submission.
 
 ### Task 3.2 — Student dashboard dan recommendation slice
 

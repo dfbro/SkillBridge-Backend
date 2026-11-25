@@ -105,7 +105,7 @@ Model logis mengikuti TDD; nama kolom, constraint final dan rubric policy harus 
 | Missions | `missions`, `rubric_versions`, `rubric_criteria` | Hanya mission `published` dapat dilihat/dikerjakan; rubric version immutable untuk penilaian lama. |
 | Submissions | `submissions`, `submission_assets` (opsional) | Mulai text-first; submission mengunci `rubric_version_id`. |
 | Assessments | `assessment_runs`, `assessment_criterion_results`, `assessment_reviews` (sesuai review policy) | Pisahkan AI draft/provisional dari hasil yang telah difinalisasi reviewer. |
-| Gamification | `xp_events` | XP ledger backend-only, idempotent, dan terpisah dari skor rubric. |
+| Gamification | `xp_events`, `learning_preferences`, `daily_activities`, `user_progress`, `user_achievements` | XP ledger backend-only/idempotent; daily activity memakai timezone pilihan user; level/achievement terpisah dari skor rubric. Reward dan milestone default tetap provisional hingga disetujui product owner. |
 
 Constraint/index awal dari TDD: unique `missions.slug`, unique `(mission_id, version)`, unique `(rubric_version_id, criterion_key)`, index riwayat submission per user, index status mission untuk reviewer, index assessment history, index XP history, score range constraint, serta idempotency/unique constraint untuk XP event.
 
@@ -139,7 +139,7 @@ Setiap slice harus meninggalkan API yang berjalan dan kontrak OpenAPI yang dapat
 
 ### Phase 3 — Improve & Progress
 
-10. XP event ledger: hanya backend yang memberi XP, sumber event dicatat, duplikasi ditolak.
+10. Learning progression: backend mencatat submission practice secara idempotent, daily goal dan timezone, streak harian, level serta achievement. Policy JSON configurable; reward points dan achievement unlock dinonaktifkan saat policy masih provisional.
 11. Dashboard dan rekomendasi berbasis aturan sederhana dari mission yang benar-benar published dan hasil yang relevan.
 
 **Checkpoint:** dashboard diturunkan dari sumber data yang konsisten; XP tidak mengubah competency score; rekomendasi tidak membuat klaim placement/kelayakan kerja.
@@ -222,6 +222,9 @@ Keputusan ini tidak menghalangi foundation lokal, tetapi harus dibahas sebelum f
 - README/ADR/OpenAPI diperbarui bila ada keputusan atau kontrak yang berubah.
 - Tidak ada commit langsung ke `main`; workflow tim mengikuti branch/PR policy pada Development Handbook.
 
-## 11. Batas rencana ini
+## 11. Status pelaksanaan dan batas saat ini
 
-Rencana ini belum memasang PostgreSQL, belum mengganti file D1, belum menambahkan dependency `pg`, belum membuat Supabase project/credentials, belum menjalankan migration produksi, belum melakukan deployment, dan belum mengubah API feature selain starter yang sudah ada. Semua perubahan implementasi dan instalasi sistem dimulai setelah rencana disetujui.
+- Foundation PostgreSQL/Hyperdrive, auth boundary, profile/career-goals, mission catalog, submission, dan learning progression sudah diimplementasikan pada branch/PR terpisah dan diuji secara lokal.
+- Learning progression menggunakan policy provisional. XP rewards dan achievement unlock tetap nonaktif sampai product owner menyetujui nilai dan status policy.
+- Dashboard/recommendations serta assessment read/status masih merupakan slice berikutnya.
+- Groq feedback, reviewer finalization, remote Supabase auth/JWKS, production RLS context, Hyperdrive staging, dan deployment menunggu keputusan produk atau kredensial Supabase.

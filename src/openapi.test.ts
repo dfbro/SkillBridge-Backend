@@ -10,6 +10,12 @@ describe("generated OpenAPI contract", () => {
     expect(document.paths["/api/v1/me/career-goals"]).toHaveProperty("put");
     expect(document.paths["/api/v1/me/career-goals/{goalId}"]).toHaveProperty("delete");
     expect(document.paths["/api/v1/missions/{missionId}/submissions"]).toHaveProperty("post");
+    expect(document.paths["/api/v1/me/learning-preferences"]).toHaveProperty("get");
+    expect(document.paths["/api/v1/me/learning-preferences"]).toHaveProperty("put");
+    expect(document.paths["/api/v1/me/progress"]).toHaveProperty("get");
+    expect(document.paths["/api/v1/me/activity"]).toHaveProperty("get");
+    expect(document.paths["/api/v1/me/achievements"]).toHaveProperty("get");
+    expect(document.paths["/api/v1/progression/policy"]).toHaveProperty("get");
   });
 
   it("declares the Bearer JWT security scheme", () => {

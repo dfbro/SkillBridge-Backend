@@ -15,6 +15,20 @@
       "when": 1795566167134,
       "tag": "0001_tense_the_professor",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1795573138016,
+      "tag": "0002_lively_anita_blake",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1795573696792,
+      "tag": "0003_milky_fixer",
+      "breakpoints": true
     }
   ]
 }

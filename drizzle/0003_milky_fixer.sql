@@ -1,0 +1,1 @@
+DROP INDEX "daily_activities_user_date_idx";
