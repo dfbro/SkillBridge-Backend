@@ -90,6 +90,9 @@ Supabase Auth routes intentionally return `503 AUTH_NOT_CONFIGURED` until `SUPAB
 | GET | `/api/v1/progression/policy` | Public | Explain proposed and active XP/level/achievement rules |
 | GET | `/api/v1/me/dashboard` | Bearer JWT | Aggregate the user's mission, submission, assessment-status and progression summary |
 | GET | `/api/v1/me/recommendations` | Bearer JWT | Suggest unattempted published missions with transparent goal-keyword reasons |
+| GET | `/api/v1/submissions/{submissionId}` | Bearer JWT (owner only) | Read own submission and latest assessment status |
+| POST | `/api/v1/submissions/{submissionId}/assessment` | Bearer JWT (owner only) | Record/reuse an assessment request in `queued` state |
+| GET | `/api/v1/submissions/{submissionId}/assessment` | Bearer JWT (owner only) | Read the latest assessment run status |
 | GET | `/openapi.json` | Public | Generated OpenAPI 3.0 document |
 
 ## Learning progression policy
@@ -109,6 +112,10 @@ The local integration test for event idempotency can run with `TEST_DATABASE_URL
 `GET /api/v1/me/recommendations?limit=5` uses a deterministic rule: compare saved career-goal keywords with published mission titles and summaries, rank keyword matches first, and use recently published unattempted missions as an exploration fallback. Each recommendation returns its `basis`, matched terms, selected goal and a human-readable reason. Missions already attempted by the learner are excluded. Recommendations are optional practice suggestions, not career-fit, job-readiness or employment predictions; no AI model is used.
 
 The dashboard reports assessment statuses and final/provisional metadata only. Score/criterion feedback is not included until the assessment API/policy slice is approved and implemented.
+
+## Assessment request and status boundary
+
+The current assessment endpoints are deliberately **request/status only**. `POST /api/v1/submissions/{submissionId}/assessment` creates a `queued` run record and changes the submission to `assessment_pending`; repeated requests reuse an existing non-failed run, a failed run can be retried, and a finalized run cannot be restarted. The current Worker does not have an assessment processor, so the response explicitly returns `processorConfigured: false`; the run remains queued until a separate processor is configured. No Groq call, score, criterion result, reviewer decision or finalization occurs in this slice. `GET` endpoints expose only owner-scoped submission/assessment lifecycle metadata.
 
 ## OpenAPI contract for frontend
 
@@ -152,7 +159,7 @@ npm run openapi:export
 - `src/features/` — feature-owned routes, schemas, services/repositories and tests.
 - `src/shared/` — cross-feature auth, database and HTTP infrastructure only.
 
-This is an incremental MVP foundation. Assessment/reviewer workflows, Groq feedback, dashboard and recommendations remain future slices; the learning progression slice is implemented with provisional reward policy pending product sign-off.
+This is an incremental MVP foundation. Dashboard/recommendations and assessment request/status metadata are implemented. Groq feedback, reviewer workflows, scoring, finalization and remote Supabase integration remain future slices/policies; the learning progression reward policy is still provisional pending product sign-off.
 
 ## GitHub CLI
 

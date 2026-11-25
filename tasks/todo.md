@@ -99,12 +99,16 @@
 ### Task 2.2 — Assessment lifecycle dan rubric result
 
 - [x] Tambahkan assessment run dan criterion result models.
+- [x] Tambahkan owner-scoped GET submission detail, POST assessment request, dan GET latest assessment status.
+- [x] Cegah duplicate active request dengan mengunci row submission; retry baru hanya diizinkan setelah run berstatus failed; finalized run diblokir.
+- [x] Dokumentasikan bahwa endpoint hanya merekam status queued dan belum memulai worker/AI processing; tidak ada score atau feedback yang diklaim tersedia.
+- [ ] Pilih dan implementasikan assessment processor (sync atau queue/worker) setelah keputusan execution mode, model Groq dan policy final tersedia.
 - [ ] Definisikan state transition queued/processing/draft_ready/needs_review/finalized/failed sesuai kebijakan yang disepakati.
 - [ ] Pisahkan hasil otomatis provisional dari hasil final; jangan menampilkan skor final sebelum syarat finalisasi terpenuhi.
 - [ ] Tambahkan reviewer route hanya setelah role, assignment dan authorization policy disetujui.
 
-**Acceptance:** assessment status dan hasil tersimpan konsisten serta tidak dapat difinalisasi oleh student/client.
-**Verification:** transition tests, invalid transition, criterion range, ownership dan review-policy tests.
+**Acceptance:** request/status API owner-only; repeat request tidak menggandakan run; failed dapat dicoba ulang; finalized tidak dapat dimulai ulang; saat ini hanya request record `queued`, tanpa AI/scoring/finalisasi.
+**Verification:** PostgreSQL integration tests untuk request, reuse, failed retry, finalized blocking dan ownership; OpenAPI contract coverage.
 **Dependencies:** Task 2.1 dan keputusan reviewer/rubric. **Scope:** Medium.
 
 ### Task 2.3 — Groq feedback provider (Should / gated)
