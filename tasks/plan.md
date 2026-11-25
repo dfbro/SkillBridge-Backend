@@ -225,6 +225,8 @@ Keputusan ini tidak menghalangi foundation lokal, tetapi harus dibahas sebelum f
 ## 11. Status pelaksanaan dan batas saat ini
 
 - Foundation PostgreSQL/Hyperdrive, auth boundary, profile/career-goals, mission catalog, submission, dan learning progression sudah diimplementasikan pada branch/PR terpisah dan diuji secara lokal.
+- Dashboard siswa mengagregasi status/riwayat source-of-truth; rekomendasi misi menggunakan overlap keyword tujuan karier dan fallback katalog published yang belum dicoba, dengan alasan transparan.
+- Dashboard/recommendation implementation intentionally exposes only assessment status/finality flags; assessment scores and feedback remain in the following assessment slice after policy approval.
 - Learning progression menggunakan policy provisional. XP rewards dan achievement unlock tetap nonaktif sampai product owner menyetujui nilai dan status policy.
 - Dashboard/recommendations serta assessment read/status masih merupakan slice berikutnya.
 - Groq feedback, reviewer finalization, remote Supabase auth/JWKS, production RLS context, Hyperdrive staging, dan deployment menunggu keputusan produk atau kredensial Supabase.

@@ -142,12 +142,15 @@
 
 ### Task 3.2 — Student dashboard dan recommendation slice
 
-- [ ] Agregasikan mission/submission/assessment status dan XP dari source of truth.
-- [ ] Implementasikan `GET /api/v1/me/dashboard`.
-- [ ] Implementasikan recommendation berbasis aturan sederhana dari mission published, tujuan dan hasil rubric yang memang tersedia.
+- [x] Agregasikan mission/submission/assessment status dan XP dari source of truth.
+- [x] Implementasikan `GET /api/v1/me/dashboard` dengan status assessment saja; skor/feedback tidak dipalsukan atau disajikan sebelum tersedia sesuai policy.
+- [x] Implementasikan `GET /api/v1/me/recommendations` berbasis overlap keyword tujuan karier terhadap judul/ringkasan mission published; fallback ke katalog mission yang belum dicoba.
+- [x] Sertakan basis, matched terms, dan alasan rekomendasi yang dapat dibaca pengguna; jangan menyatakan prediksi career fit atau employment.
 
 **Acceptance:** dashboard hanya berisi data user sendiri; provisional/final dibedakan; recommendation tidak menyatakan job placement atau kepastian career fit.
-**Verification:** aggregation tests, cross-user test, empty state dan OpenAPI validation.
+**Verification:** PostgreSQL dashboard integration test; pure recommendation tests untuk goal-match, attempted-mission exclusion, fallback dan empty catalogue; OpenAPI route coverage.
+
+**Current implementation:** dashboard query is derived from user-owned submissions, published missions, assessment run status and progression source records. Recommendation query only reads published catalog missions and excludes mission IDs already present in the learner's submissions.
 **Dependencies:** Task 1.2, 1.3, 2.1, 2.2 dan 3.1. **Scope:** Medium.
 
 ### Checkpoint — Improve

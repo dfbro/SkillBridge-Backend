@@ -16,6 +16,8 @@ describe("generated OpenAPI contract", () => {
     expect(document.paths["/api/v1/me/activity"]).toHaveProperty("get");
     expect(document.paths["/api/v1/me/achievements"]).toHaveProperty("get");
     expect(document.paths["/api/v1/progression/policy"]).toHaveProperty("get");
+    expect(document.paths["/api/v1/me/dashboard"]).toHaveProperty("get");
+    expect(document.paths["/api/v1/me/recommendations"]).toHaveProperty("get");
   });
 
   it("declares the Bearer JWT security scheme", () => {
