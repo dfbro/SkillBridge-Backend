@@ -88,6 +88,8 @@ Supabase Auth routes intentionally return `503 AUTH_NOT_CONFIGURED` until `SUPAB
 | GET | `/api/v1/me/activity` | Bearer JWT | Read up to 90 days of local-date practice history |
 | GET | `/api/v1/me/achievements` | Bearer JWT | Read available and unlocked achievement states |
 | GET | `/api/v1/progression/policy` | Public | Explain proposed and active XP/level/achievement rules |
+| GET | `/api/v1/me/dashboard` | Bearer JWT | Aggregate the user's mission, submission, assessment-status and progression summary |
+| GET | `/api/v1/me/recommendations` | Bearer JWT | Suggest unattempted published missions with transparent goal-keyword reasons |
 | GET | `/openapi.json` | Public | Generated OpenAPI 3.0 document |
 
 ## Learning progression policy
@@ -99,6 +101,14 @@ The progression slice records practice activity from successful submission creat
 Events recorded while the policy is provisional remain zero-point events after approval; old submissions are not credited retroactively. Any backfill would require a separately reviewed policy and idempotency design.
 
 The local integration test for event idempotency can run with `TEST_DATABASE_URL` pointing at the development PostgreSQL database. It verifies that retrying the same event does not double-credit XP or daily practice counts.
+
+## Student dashboard and mission recommendations
+
+`GET /api/v1/me/dashboard` aggregates published-mission count, the authenticated user's started/completed mission and submission counts, recent submissions, and assessment statuses. It includes XP/level/streak/daily-goal metrics in a separate `progression` object. Assessment entries contain status and final/provisional flags only; scores and feedback are not fabricated or exposed by this slice.
+
+`GET /api/v1/me/recommendations?limit=5` uses a deterministic rule: compare saved career-goal keywords with published mission titles and summaries, rank keyword matches first, and use recently published unattempted missions as an exploration fallback. Each recommendation returns its `basis`, matched terms, selected goal and a human-readable reason. Missions already attempted by the learner are excluded. Recommendations are optional practice suggestions, not career-fit, job-readiness or employment predictions; no AI model is used.
+
+The dashboard reports assessment statuses and final/provisional metadata only. Score/criterion feedback is not included until the assessment API/policy slice is approved and implemented.
 
 ## OpenAPI contract for frontend
 

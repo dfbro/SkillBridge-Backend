@@ -7,6 +7,8 @@ import { careerGoalsRoutes } from "./features/career-goals/career-goals.routes";
 import { missionsRoutes } from "./features/missions/missions.routes";
 import { submissionsRoutes } from "./features/submissions/submissions.routes";
 import { progressionRoutes } from "./features/progression/progression.routes";
+import { dashboardRoutes } from "./features/dashboard/dashboard.routes";
+import { recommendationsRoutes } from "./features/recommendations/recommendations.routes";
 import { databaseMiddleware } from "./shared/database";
 import { requireAuth } from "./shared/auth";
 import type { AppEnv } from "./shared/types";
@@ -38,12 +40,16 @@ app.use("/api/v1/me/learning-preferences", requireAuth);
 app.use("/api/v1/me/progress", requireAuth);
 app.use("/api/v1/me/activity", requireAuth);
 app.use("/api/v1/me/achievements", requireAuth);
+app.use("/api/v1/me/dashboard", requireAuth);
+app.use("/api/v1/me/recommendations", requireAuth);
 app.use("/api/v1/*", databaseMiddleware);
 app.route("/api/v1", profilesRoutes);
 app.route("/api/v1", careerGoalsRoutes);
 app.route("/api/v1", missionsRoutes);
 app.route("/api/v1", submissionsRoutes);
 app.route("/api/v1", progressionRoutes);
+app.route("/api/v1", dashboardRoutes);
+app.route("/api/v1", recommendationsRoutes);
 
 app.onError((error, c) => {
   const requestId = c.get("requestId");

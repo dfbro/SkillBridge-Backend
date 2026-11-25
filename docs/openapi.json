@@ -700,6 +700,323 @@
           "data"
         ]
       },
+      "StudentDashboardResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "enum": [
+              true
+            ]
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "generatedAt": {
+                "type": "string"
+              },
+              "summary": {
+                "type": "object",
+                "properties": {
+                  "publishedMissionsAvailable": {
+                    "type": "integer"
+                  },
+                  "startedMissions": {
+                    "type": "integer"
+                  },
+                  "completedMissions": {
+                    "type": "integer"
+                  },
+                  "totalSubmissions": {
+                    "type": "integer"
+                  },
+                  "submissionStatuses": {
+                    "type": "object",
+                    "properties": {
+                      "submitted": {
+                        "type": "integer"
+                      },
+                      "assessmentPending": {
+                        "type": "integer"
+                      },
+                      "needsReview": {
+                        "type": "integer"
+                      },
+                      "completed": {
+                        "type": "integer"
+                      },
+                      "assessmentFailed": {
+                        "type": "integer"
+                      }
+                    },
+                    "required": [
+                      "submitted",
+                      "assessmentPending",
+                      "needsReview",
+                      "completed",
+                      "assessmentFailed"
+                    ]
+                  },
+                  "assessments": {
+                    "type": "object",
+                    "properties": {
+                      "total": {
+                        "type": "integer"
+                      },
+                      "provisional": {
+                        "type": "integer"
+                      },
+                      "finalized": {
+                        "type": "integer"
+                      },
+                      "failed": {
+                        "type": "integer"
+                      }
+                    },
+                    "required": [
+                      "total",
+                      "provisional",
+                      "finalized",
+                      "failed"
+                    ]
+                  }
+                },
+                "required": [
+                  "publishedMissionsAvailable",
+                  "startedMissions",
+                  "completedMissions",
+                  "totalSubmissions",
+                  "submissionStatuses",
+                  "assessments"
+                ]
+              },
+              "progression": {
+                "type": "object",
+                "properties": {
+                  "totalXp": {
+                    "type": "integer"
+                  },
+                  "level": {
+                    "type": "integer"
+                  },
+                  "currentStreak": {
+                    "type": "integer"
+                  },
+                  "longestStreak": {
+                    "type": "integer"
+                  },
+                  "policyStatus": {
+                    "type": "string",
+                    "enum": [
+                      "provisional",
+                      "approved"
+                    ]
+                  },
+                  "dailyGoal": {
+                    "type": "object",
+                    "properties": {
+                      "targetXp": {
+                        "type": "integer"
+                      },
+                      "earnedXp": {
+                        "type": "integer"
+                      },
+                      "remainingXp": {
+                        "type": "integer"
+                      },
+                      "completed": {
+                        "type": "boolean"
+                      },
+                      "activityDate": {
+                        "type": "string"
+                      },
+                      "timezone": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "targetXp",
+                      "earnedXp",
+                      "remainingXp",
+                      "completed",
+                      "activityDate",
+                      "timezone"
+                    ]
+                  }
+                },
+                "required": [
+                  "totalXp",
+                  "level",
+                  "currentStreak",
+                  "longestStreak",
+                  "policyStatus",
+                  "dailyGoal"
+                ]
+              },
+              "recentSubmissions": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "mission": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "slug": {
+                          "type": "string"
+                        },
+                        "title": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "slug",
+                        "title"
+                      ]
+                    },
+                    "status": {
+                      "type": "string"
+                    },
+                    "submittedAt": {
+                      "type": "string"
+                    },
+                    "assessment": {
+                      "type": "object",
+                      "nullable": true,
+                      "properties": {
+                        "status": {
+                          "type": "string"
+                        },
+                        "isFinal": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "status",
+                        "isFinal"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "mission",
+                    "status",
+                    "submittedAt",
+                    "assessment"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "generatedAt",
+              "summary",
+              "progression",
+              "recentSubmissions"
+            ]
+          }
+        },
+        "required": [
+          "success",
+          "data"
+        ]
+      },
+      "MissionRecommendationsResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "enum": [
+              true
+            ]
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "generatedAt": {
+                "type": "string"
+              },
+              "method": {
+                "type": "string",
+                "enum": [
+                  "career_goal_keyword_overlap_with_catalog_fallback"
+                ]
+              },
+              "note": {
+                "type": "string"
+              },
+              "recommendations": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "missionId": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "slug": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "summary": {
+                      "type": "string"
+                    },
+                    "basis": {
+                      "type": "string",
+                      "enum": [
+                        "career_goal_match",
+                        "catalog_exploration"
+                      ]
+                    },
+                    "careerGoal": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "matchedTerms": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "reason": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "missionId",
+                    "slug",
+                    "title",
+                    "summary",
+                    "basis",
+                    "careerGoal",
+                    "matchedTerms",
+                    "reason"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "generatedAt",
+              "method",
+              "note",
+              "recommendations"
+            ]
+          }
+        },
+        "required": [
+          "success",
+          "data"
+        ]
+      },
       "HealthResponse": {
         "type": "object",
         "properties": {
@@ -2352,6 +2669,219 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/AchievementsResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        false
+                      ]
+                    },
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Authentication is not configured",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        false
+                      ]
+                    },
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/me/dashboard": {
+      "get": {
+        "tags": [
+          "Student Dashboard"
+        ],
+        "summary": "Get a source-backed student practice and progression summary",
+        "description": "Aggregates the authenticated user's submissions, assessment statuses, published mission count and learning progression. XP/level are displayed separately from rubric competency results.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Student dashboard",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StudentDashboardResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        false
+                      ]
+                    },
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Authentication is not configured",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        false
+                      ]
+                    },
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/me/recommendations": {
+      "get": {
+        "tags": [
+          "Mission Recommendations"
+        ],
+        "summary": "Recommend published missions with explainable rule-based reasons",
+        "description": "Uses career-goal keyword overlap and a published-catalog exploration fallback. This is an optional practice suggestion, not a career-fit or employment prediction.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 10,
+              "default": 5
+            },
+            "required": false,
+            "name": "limit",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Explainable published mission recommendations",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MissionRecommendationsResponse"
                 }
               }
             }
