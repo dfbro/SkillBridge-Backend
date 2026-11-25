@@ -27,6 +27,7 @@ submissionsRoutes.openapi(createRoute({
     201: { description: "Submission created", content: { "application/json": { schema: submissionCreated } } },
     400: { description: "Invalid submission", content: { "application/json": { schema: errorResponse } } },
     401: { description: "Authentication required", content: { "application/json": { schema: errorResponse } } },
+    403: { description: "Account role is not enabled for this MVP", content: { "application/json": { schema: errorResponse } } },
     404: { description: "Mission or active rubric not found", content: { "application/json": { schema: errorResponse } } },
     503: { description: "Authentication is not configured", content: { "application/json": { schema: errorResponse } } },
   },
@@ -67,6 +68,7 @@ submissionsRoutes.openapi(createRoute({
   responses: {
     200: { description: "Submission history", content: { "application/json": { schema: submissionList } } },
     401: { description: "Authentication required", content: { "application/json": { schema: errorResponse } } },
+    403: { description: "Account role is not enabled for this MVP", content: { "application/json": { schema: errorResponse } } },
     503: { description: "Authentication is not configured", content: { "application/json": { schema: errorResponse } } },
   },
 }), async (c) => {

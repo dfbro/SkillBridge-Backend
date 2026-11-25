@@ -67,6 +67,8 @@ Copy `.env.example` as a reference; never commit real credentials.
 
 Supabase Auth routes intentionally return `503 AUTH_NOT_CONFIGURED` until `SUPABASE_JWKS_URL` and `SUPABASE_ISSUER` are supplied. The auth middleware verifies issuer, `authenticated` audience, signature and expiry. The current implementation assumes an asymmetric signing key/JWKS configuration; legacy HS256 projects need a separately reviewed verification strategy.
 
+The MVP supports one product role: `student`. The backend reads the role only from the verified JWT `app_metadata.role` claim; it never trusts a role in request data or `user_metadata`. A missing role claim defaults to `student` for the current MVP. An explicit unsupported or malformed role is rejected with `403 ROLE_NOT_ALLOWED`. Student registration/admission rules and Supabase claim provisioning remain TBD.
+
 ## API routes
 
 | Method | Path | Authentication | Purpose |
@@ -95,6 +97,14 @@ Supabase Auth routes intentionally return `503 AUTH_NOT_CONFIGURED` until `SUPAB
 | GET | `/api/v1/submissions/{submissionId}/assessment` | Bearer JWT (owner only) | Read the latest assessment run status |
 | GET | `/openapi.json` | Public | Generated OpenAPI 3.0 document |
 
+Protected API routes may return `403 ROLE_NOT_ALLOWED` when the verified account has an explicit role that is not supported by this MVP.
+
+## MVP product boundary
+
+- **Roles:** `student` only. There are no reviewer or admin product roles in the current MVP. The separate trusted access path for staff who perform mandatory assessment reviews is not yet defined.
+- **Submissions:** text-only JSON submissions through the `content` field. Attachments, file upload routes, asset tables and Supabase Storage are out of scope.
+- **Assessment review:** human review is mandatory before an assessment can be finalized. The current assessment API only records/reports lifecycle status; there is no processor or reviewer workflow. No AI output may be marked final automatically. Reviewer identity, authorization, assignment, audit trail and queue/SLA are TBD.
+
 ## Learning progression policy
 
 The progression slice records practice activity from successful submission creation. Activity dates are calculated using each learner's IANA timezone; streaks are based on consecutive local calendar days, and the provisional policy allows one grace day after the last recorded practice. Multiple submissions on one local day count as one streak day. Client requests cannot award XP.
@@ -115,7 +125,7 @@ The dashboard reports assessment statuses and final/provisional metadata only. S
 
 ## Assessment request and status boundary
 
-The current assessment endpoints are deliberately **request/status only**. `POST /api/v1/submissions/{submissionId}/assessment` creates a `queued` run record and changes the submission to `assessment_pending`; repeated requests reuse an existing non-failed run, a failed run can be retried, and a finalized run cannot be restarted. The current Worker does not have an assessment processor, so the response explicitly returns `processorConfigured: false`; the run remains queued until a separate processor is configured. No Groq call, score, criterion result, reviewer decision or finalization occurs in this slice. `GET` endpoints expose only owner-scoped submission/assessment lifecycle metadata.
+The current assessment endpoints are deliberately **request/status only**. `POST /api/v1/submissions/{submissionId}/assessment` creates a `queued` run record and changes the submission to `assessment_pending`; repeated requests reuse an existing non-failed run, a failed run can be retried, and a finalized run cannot be restarted. The current Worker does not have an assessment processor, so the response explicitly returns `processorConfigured: false`; the run remains queued until a separate processor is configured. No Groq call, score, criterion result, reviewer decision or finalization occurs in this slice. Human review is mandatory for any future finalization. `GET` endpoints expose only owner-scoped submission/assessment lifecycle metadata.
 
 ## OpenAPI contract for frontend
 
@@ -132,6 +142,8 @@ npm run openapi:export
 ```
 
 This writes `docs/openapi.json`. Regenerate it after changing any route or schema. The document includes HTTP methods, path/query/body parameters, response schemas, tags and the Bearer JWT security scheme.
+
+The backend OpenAPI document is the canonical frontend contract. Frontend code should consume the REST endpoints and derive/generate its API types or client from this document instead of maintaining duplicate request/response definitions or connecting directly to PostgreSQL/Supabase. The MVP frontend scope is student-facing only. Frontend framework/repository and code-generation tooling remain TBD until that project is available; no frontend stack is assumed here.
 
 ## Database workflow
 
@@ -156,6 +168,7 @@ npm run openapi:export
 
 - `tasks/plan.md` — approved architecture, delivery phases, risks and open decisions.
 - `tasks/todo.md` — vertical slices, acceptance criteria and verification checklist.
+- `docs/adr/0006-student-only-text-submissions-mandatory-review.md` — approved MVP product-role, submission and assessment-review boundaries.
 - `src/features/` — feature-owned routes, schemas, services/repositories and tests.
 - `src/shared/` — cross-feature auth, database and HTTP infrastructure only.
 

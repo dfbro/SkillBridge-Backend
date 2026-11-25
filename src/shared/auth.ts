@@ -1,6 +1,6 @@
 import { createRemoteJWKSet, jwtVerify } from "jose";
 import type { MiddlewareHandler } from "hono";
-import type { AppEnv } from "./types";
+import type { AppEnv, AppRole } from "./types";
 
 const jwksCache = new Map<string, ReturnType<typeof createRemoteJWKSet>>();
 
@@ -11,6 +11,14 @@ function getJwks(url: string) {
     jwksCache.set(url, jwks);
   }
   return jwks;
+}
+
+export function resolveUserRole(appMetadata: unknown): AppRole | null {
+  if (appMetadata === undefined) return "student";
+  if (typeof appMetadata !== "object" || appMetadata === null || Array.isArray(appMetadata)) return null;
+
+  if (!Object.prototype.hasOwnProperty.call(appMetadata, "role")) return "student";
+  return (appMetadata as Record<string, unknown>).role === "student" ? "student" : null;
 }
 
 export const requireAuth: MiddlewareHandler<AppEnv> = async (c, next) => {
@@ -32,10 +40,10 @@ export const requireAuth: MiddlewareHandler<AppEnv> = async (c, next) => {
       audience: "authenticated",
     });
     if (typeof payload.sub !== "string") throw new Error("JWT subject is missing");
-    const appMetadata = payload.app_metadata;
-    const role = typeof appMetadata === "object" && appMetadata !== null && "role" in appMetadata && typeof appMetadata.role === "string"
-      ? appMetadata.role
-      : "student";
+    const role = resolveUserRole(payload.app_metadata);
+    if (!role) {
+      return c.json({ success: false, error: { code: "ROLE_NOT_ALLOWED", message: "This account role is not enabled for the current MVP." } }, 403);
+    }
     c.set("user", { id: payload.sub, role });
     await next();
   } catch {

@@ -69,6 +69,7 @@ assessmentsRoutes.openapi(createRoute({
   responses: {
     200: { description: "Submission detail and latest assessment status", content: { "application/json": { schema: submissionDetailSchema } } },
     401: { description: "Authentication required", content: { "application/json": { schema: errorResponse } } },
+    403: { description: "Account role is not enabled for this MVP", content: { "application/json": { schema: errorResponse } } },
     404: { description: "Submission not found", content: { "application/json": { schema: errorResponse } } },
     503: { description: "Authentication is not configured", content: { "application/json": { schema: errorResponse } } },
   },
@@ -91,6 +92,7 @@ assessmentsRoutes.openapi(createRoute({
     202: { description: "Assessment request recorded in queued state; processing is not configured", content: { "application/json": { schema: assessmentResponseSchema } } },
     200: { description: "An existing active assessment request was reused", content: { "application/json": { schema: assessmentResponseSchema } } },
     401: { description: "Authentication required", content: { "application/json": { schema: errorResponse } } },
+    403: { description: "Account role is not enabled for this MVP", content: { "application/json": { schema: errorResponse } } },
     404: { description: "Submission not found", content: { "application/json": { schema: errorResponse } } },
     409: { description: "Submission is not assessable in its current state or is already finalized", content: { "application/json": { schema: errorResponse } } },
     503: { description: "Authentication is not configured", content: { "application/json": { schema: errorResponse } } },
@@ -140,6 +142,7 @@ assessmentsRoutes.openapi(createRoute({
   responses: {
     200: { description: "Latest assessment lifecycle status", content: { "application/json": { schema: assessmentStatusResponseSchema } } },
     401: { description: "Authentication required", content: { "application/json": { schema: errorResponse } } },
+    403: { description: "Account role is not enabled for this MVP", content: { "application/json": { schema: errorResponse } } },
     404: { description: "Submission or assessment request not found", content: { "application/json": { schema: errorResponse } } },
     503: { description: "Authentication is not configured", content: { "application/json": { schema: errorResponse } } },
   },

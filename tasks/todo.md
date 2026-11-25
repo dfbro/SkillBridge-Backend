@@ -2,6 +2,23 @@
 
 **Status:** Plan approved. Foundation dan slice awal telah dikerjakan; item yang memerlukan Supabase project atau kebijakan produk tetap terbuka.
 
+## Approved MVP Decisions — 2026-11-25
+
+- [x] Product roles: `student` only. Reviewer/admin are not MVP user roles. The auth boundary accepts only a verified `app_metadata.role` of `student`; an absent role claim retains the existing student default, while any explicit unsupported/malformed role is rejected with HTTP 403.
+- [x] Assessment review: mandatory human review before any assessment can be finalized. Reviewer identity, authorization channel, assignment and audit trail remain **TBD**; do not add reviewer endpoints or automatic finalization while these are unresolved.
+- [x] Submission: text-only (`content` string). File/image/video attachments, upload handlers, asset tables and Storage are out of MVP scope.
+
+### Remaining product/infrastructure decisions — TBD
+
+- API success/error envelope agreement with Frontend Lead.
+- Frontend repository/framework and generated-client tooling; backend OpenAPI remains the canonical contract and MVP UI scope is student-only.
+- Student registration/admission policy and how student role claims are provisioned in Supabase.
+- Trusted reviewer identity/access path despite there being no reviewer product role; reviewer assignment, audit trail and review SLA.
+- Rubric criteria, scale, weights, versioning, and provisional-feedback visibility to students.
+- Assessment execution mode/queue, retry and timeout policy, Groq model and structured-output contract.
+- XP rewards and progression values; retention/deletion and under-18 privacy/consent policy.
+- Supabase signing configuration, runtime DB role, RLS user-context strategy, Hyperdrive and deployment credentials.
+
 ## Phase 0 — Foundation
 
 ### Task 0.1 — Install dan siapkan PostgreSQL lokal
@@ -51,11 +68,12 @@
 
 - [x] Tambahkan profile schema dan GET/PATCH `/api/v1/me` routes.
 - [x] Tambahkan middleware yang membangun auth context dari token yang benar-benar diverifikasi menggunakan Supabase JWKS.
+- [x] Batasi role aplikasi MVP ke `student` dari verified `app_metadata`; tolak explicit role lain/malformed dengan HTTP 403.
 - [x] Implementasikan `GET/PATCH /api/v1/me`; jangan percaya `user_id` dari body.
 - [ ] Siapkan test token valid, invalid, expired dan ownership; strategi remote JWKS perlu diverifikasi setelah project tersedia.
 
-**Acceptance:** middleware memverifikasi issuer, audience, signature dan expiry; auth mengembalikan 503 jika Supabase belum dikonfigurasi. Remote token tests/cross-user tests pending project.
-**Verification:** OpenAPI contract tests dan schema tests passed; remote auth integration pending.
+**Acceptance:** middleware memverifikasi issuer, audience, signature dan expiry; hanya role `student` yang diterima; role lain ditolak 403; auth mengembalikan 503 jika Supabase belum dikonfigurasi. Remote token tests/cross-user tests pending project.
+**Verification:** role allowlist unit tests, OpenAPI 403 contract, schema tests; remote auth integration pending Supabase project.
 **Dependencies:** Task 0.3; Supabase project diperlukan untuk remote verification. **Scope:** Medium.
 
 ### Task 1.2 — Career goals slice
@@ -91,6 +109,7 @@
 - [x] Tambahkan submission schema dan routes dengan rubric version reference.
 - [x] Implementasikan `POST /api/v1/missions/:missionId/submissions` dan own history.
 - [x] Validasi mission published, batas konten dan ownership; user ID dari auth context.
+- [x] Tetapkan scope MVP text-only; tidak menerima attachment atau asset upload.
 
 **Acceptance:** submission tersimpan terkait user, mission dan rubric version yang tepat; client tidak dapat mengirim identitas atau skor.
 **Verification:** valid/invalid payload, mission unavailable, retry/duplicate, user isolation dan OpenAPI tests.
@@ -102,14 +121,16 @@
 - [x] Tambahkan owner-scoped GET submission detail, POST assessment request, dan GET latest assessment status.
 - [x] Cegah duplicate active request dengan mengunci row submission; retry baru hanya diizinkan setelah run berstatus failed; finalized run diblokir.
 - [x] Dokumentasikan bahwa endpoint hanya merekam status queued dan belum memulai worker/AI processing; tidak ada score atau feedback yang diklaim tersedia.
-- [ ] Pilih dan implementasikan assessment processor (sync atau queue/worker) setelah keputusan execution mode, model Groq dan policy final tersedia.
-- [ ] Definisikan state transition queued/processing/draft_ready/needs_review/finalized/failed sesuai kebijakan yang disepakati.
-- [ ] Pisahkan hasil otomatis provisional dari hasil final; jangan menampilkan skor final sebelum syarat finalisasi terpenuhi.
-- [ ] Tambahkan reviewer route hanya setelah role, assignment dan authorization policy disetujui.
+- [x] Enforce keputusan bahwa hanya student yang menjadi role pengguna produk MVP; tidak ada reviewer/admin endpoint.
+- [ ] Tentukan jalur trusted reviewer di luar role pengguna produk (identity, authorization, assignment, audit trail dan SLA).
+- [ ] Pilih dan implementasikan assessment processor (sync atau queue/worker) setelah keputusan execution mode, model Groq dan rubric tersedia.
+- [ ] Definisikan state transition queued/processing/draft_ready/needs_review/finalized/failed: hasil AI hanya draft/provisional, review manusia wajib, dan `is_final=true` hanya setelah reviewer berwenang menyetujui.
+- [ ] Putuskan apakah draft/feedback provisional dapat ditampilkan kepada student sebelum human review.
+- [ ] Tambahkan reviewer operations endpoint hanya setelah jalur trusted reviewer dan authorization policy disetujui; jangan menambah `reviewer` sebagai product role tanpa keputusan baru.
 
-**Acceptance:** request/status API owner-only; repeat request tidak menggandakan run; failed dapat dicoba ulang; finalized tidak dapat dimulai ulang; saat ini hanya request record `queued`, tanpa AI/scoring/finalisasi.
+**Acceptance:** request/status API owner-only untuk student; repeat request tidak menggandakan run; failed dapat dicoba ulang; finalized tidak dapat dimulai ulang; mandatory human review menjadi satu-satunya jalur finalisasi; saat ini hanya request record `queued`, tanpa AI/scoring/finalisasi.
 **Verification:** PostgreSQL integration tests untuk request, reuse, failed retry, finalized blocking dan ownership; OpenAPI contract coverage.
-**Dependencies:** Task 2.1 dan keputusan reviewer/rubric. **Scope:** Medium.
+**Dependencies:** Task 2.1 dan keputusan reviewer access/rubric/processor. **Scope:** Medium.
 
 ### Task 2.3 — Groq feedback provider (Should / gated)
 
@@ -117,6 +138,7 @@
 - [ ] Bangun prompt berbasis brief, rubric version dan submission yang telah dibatasi.
 - [ ] Validasi struktur output dengan Zod dan aturan domain rubric; submission diperlakukan sebagai untrusted data.
 - [ ] Tangani timeout, 429, 5xx, invalid output dan insufficient evidence tanpa menghasilkan skor palsu.
+- [ ] Seluruh hasil provider tetap provisional dan berstatus `needs_review` sampai human reviewer yang berwenang menyetujui; provider tidak boleh memfinalisasi assessment.
 
 **Acceptance:** feedback hanya muncul sesuai status policy; output invalid ditolak; submission tidak hilang saat provider gagal.
 **Verification:** provider adapter tests, fixture valid/invalid, timeout/rate-limit tests dan prompt-injection regression case.
