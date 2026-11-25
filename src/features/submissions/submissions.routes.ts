@@ -2,6 +2,8 @@ import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { and, desc, eq } from "drizzle-orm";
 import { missions, profiles, rubricVersions, submissions } from "../../db/schema";
 import type { AppEnv } from "../../shared/types";
+import { recordSubmissionPracticeInTransaction } from "../progression/progression.service";
+import { resolveProgressionPolicy } from "../progression/progression.policy";
 
 export const submissionsRoutes = new OpenAPIHono<AppEnv>();
 
@@ -41,8 +43,17 @@ submissionsRoutes.openapi(createRoute({
     .orderBy(desc(rubricVersions.version)).limit(1);
   if (!rubric) return c.json({ success: false as const, error: { code: "RUBRIC_NOT_FOUND", message: "This mission has no published rubric." } }, 404);
 
-  await db.insert(profiles).values({ id: userId }).onConflictDoNothing();
-  const [row] = await db.insert(submissions).values({ userId, missionId, rubricVersionId: rubric.id, content }).returning();
+  const row = await db.transaction(async (tx) => {
+    await tx.insert(profiles).values({ id: userId }).onConflictDoNothing();
+    const [created] = await tx.insert(submissions).values({ userId, missionId, rubricVersionId: rubric.id, content }).returning();
+    await recordSubmissionPracticeInTransaction(
+      tx,
+      userId,
+      created.id,
+      resolveProgressionPolicy(c.env.PROGRESSION_POLICY_JSON),
+    );
+    return created;
+  });
   return c.json({ success: true as const, data: {
     id: row.id, missionId: row.missionId, rubricVersionId: row.rubricVersionId,
     content: row.content, status: row.status, createdAt: row.createdAt.toISOString(),

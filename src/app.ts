@@ -6,6 +6,7 @@ import { profilesRoutes } from "./features/profiles/profiles.routes";
 import { careerGoalsRoutes } from "./features/career-goals/career-goals.routes";
 import { missionsRoutes } from "./features/missions/missions.routes";
 import { submissionsRoutes } from "./features/submissions/submissions.routes";
+import { progressionRoutes } from "./features/progression/progression.routes";
 import { databaseMiddleware } from "./shared/database";
 import { requireAuth } from "./shared/auth";
 import type { AppEnv } from "./shared/types";
@@ -29,15 +30,20 @@ app.use("/api/v1/*", cors({
   maxAge: 600,
 }));
 
-app.use("/api/v1/*", databaseMiddleware);
 app.use("/api/v1/me", requireAuth);
 app.use("/api/v1/me/career-goals", requireAuth);
 app.use("/api/v1/me/submissions", requireAuth);
 app.use("/api/v1/missions/:missionId/submissions", requireAuth);
+app.use("/api/v1/me/learning-preferences", requireAuth);
+app.use("/api/v1/me/progress", requireAuth);
+app.use("/api/v1/me/activity", requireAuth);
+app.use("/api/v1/me/achievements", requireAuth);
+app.use("/api/v1/*", databaseMiddleware);
 app.route("/api/v1", profilesRoutes);
 app.route("/api/v1", careerGoalsRoutes);
 app.route("/api/v1", missionsRoutes);
 app.route("/api/v1", submissionsRoutes);
+app.route("/api/v1", progressionRoutes);
 
 app.onError((error, c) => {
   const requestId = c.get("requestId");

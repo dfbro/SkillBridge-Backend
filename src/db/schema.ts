@@ -1,6 +1,7 @@
 import {
   boolean,
   check,
+  date,
   index,
   integer,
   jsonb,
@@ -119,6 +120,53 @@ export const xpEvents = pgTable("xp_events", {
   check("xp_events_points_nonnegative_ck", sql`${table.points} >= 0`),
 ]);
 
+export const learningPreferences = pgTable("learning_preferences", {
+  userId: uuid("user_id").primaryKey().references(() => profiles.id, { onDelete: "cascade" }),
+  dailyXpGoal: integer("daily_xp_goal").notNull().default(20),
+  timezone: varchar("timezone", { length: 80 }).notNull().default("Asia/Jakarta"),
+  createdAt: createdAt(),
+  updatedAt: updatedAt(),
+}, (table) => [check("learning_preferences_daily_goal_range_ck", sql`${table.dailyXpGoal} BETWEEN 10 AND 100`)]);
+
+export const dailyActivities = pgTable("daily_activities", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: uuid("user_id").notNull().references(() => profiles.id, { onDelete: "cascade" }),
+  activityDate: date("activity_date", { mode: "string" }).notNull(),
+  timezone: varchar("timezone", { length: 80 }).notNull(),
+  xpEarned: integer("xp_earned").notNull().default(0),
+  submissionsCompleted: integer("submissions_completed").notNull().default(0),
+  createdAt: createdAt(),
+  updatedAt: updatedAt(),
+}, (table) => [
+  uniqueIndex("daily_activities_user_date_uq").on(table.userId, table.activityDate),
+  check("daily_activities_xp_nonnegative_ck", sql`${table.xpEarned} >= 0`),
+  check("daily_activities_submissions_nonnegative_ck", sql`${table.submissionsCompleted} >= 0`),
+]);
+
+export const userProgress = pgTable("user_progress", {
+  userId: uuid("user_id").primaryKey().references(() => profiles.id, { onDelete: "cascade" }),
+  totalXp: integer("total_xp").notNull().default(0),
+  level: integer("level").notNull().default(1),
+  currentStreak: integer("current_streak").notNull().default(0),
+  longestStreak: integer("longest_streak").notNull().default(0),
+  lastActivityDate: date("last_activity_date", { mode: "string" }),
+  updatedAt: updatedAt(),
+}, (table) => [
+  check("user_progress_xp_nonnegative_ck", sql`${table.totalXp} >= 0`),
+  check("user_progress_level_positive_ck", sql`${table.level} >= 1`),
+  check("user_progress_streak_nonnegative_ck", sql`${table.currentStreak} >= 0 AND ${table.longestStreak} >= 0`),
+]);
+
+export const userAchievements = pgTable("user_achievements", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: uuid("user_id").notNull().references(() => profiles.id, { onDelete: "cascade" }),
+  achievementCode: varchar("achievement_code", { length: 60 }).notNull(),
+  unlockedAt: timestamp("unlocked_at", { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [
+  uniqueIndex("user_achievements_user_code_uq").on(table.userId, table.achievementCode),
+  index("user_achievements_user_unlocked_idx").on(table.userId, table.unlockedAt),
+]);
+
 export const schema = {
   profiles,
   careerGoals,
@@ -129,4 +177,8 @@ export const schema = {
   assessmentRuns,
   assessmentCriterionResults,
   xpEvents,
+  learningPreferences,
+  dailyActivities,
+  userProgress,
+  userAchievements,
 };
