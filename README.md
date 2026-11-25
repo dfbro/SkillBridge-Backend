@@ -143,7 +143,9 @@ npm run openapi:export
 
 This writes `docs/openapi.json`. Regenerate it after changing any route or schema. The document includes HTTP methods, path/query/body parameters, response schemas, tags and the Bearer JWT security scheme.
 
-The backend OpenAPI document is the canonical frontend contract. Frontend code should consume the REST endpoints and derive/generate its API types or client from this document instead of maintaining duplicate request/response definitions or connecting directly to PostgreSQL/Supabase. The MVP frontend scope is student-facing only. Frontend framework/repository and code-generation tooling remain TBD until that project is available; no frontend stack is assumed here.
+The backend OpenAPI document is the canonical frontend contract. Frontend code should consume the REST endpoints and derive/generate its API types or client from this document instead of maintaining duplicate request/response definitions or connecting directly to PostgreSQL/Supabase. The MVP frontend scope is student-facing only. The selected frontend stack and integration flow are recorded below and in ADR 0007; the frontend repository itself has not yet been created.
+
+The approved frontend architecture is a React + TypeScript + Vite SPA, with React Router, TanStack Query, Supabase JS for Auth/session only, and `openapi-typescript` + `openapi-fetch` for a typed REST client. Deploy it as a separate Cloudflare Worker with Static Assets using the Cloudflare Vite plugin. Keep a reviewed copy of `docs/openapi.json` in the frontend repository and regenerate its API types whenever a backend contract PR changes the OpenAPI document. Configure `CORS_ORIGINS` to the exact frontend origins. The current product envelope is `{ success: true, data }` for success and `{ success: false, error: { code, message } }` for errors; `/health` and `/health/database` are operational exceptions. See [ADR 0007](docs/adr/0007-student-frontend-openapi-first-architecture.md).
 
 ## Database workflow
 
@@ -169,6 +171,7 @@ npm run openapi:export
 - `tasks/plan.md` — approved architecture, delivery phases, risks and open decisions.
 - `tasks/todo.md` — vertical slices, acceptance criteria and verification checklist.
 - `docs/adr/0006-student-only-text-submissions-mandatory-review.md` — approved MVP product-role, submission and assessment-review boundaries.
+- `docs/adr/0007-student-frontend-openapi-first-architecture.md` — approved student frontend stack and OpenAPI-first integration boundary.
 - `src/features/` — feature-owned routes, schemas, services/repositories and tests.
 - `src/shared/` — cross-feature auth, database and HTTP infrastructure only.
 

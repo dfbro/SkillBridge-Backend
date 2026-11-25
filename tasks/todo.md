@@ -10,14 +10,25 @@
 
 ### Remaining product/infrastructure decisions — TBD
 
-- API success/error envelope agreement with Frontend Lead.
-- Frontend repository/framework and generated-client tooling; backend OpenAPI remains the canonical contract and MVP UI scope is student-only.
+- Frontend GitHub repository creation/ownership, domains, deployment environments and API origins. Frontend architecture is selected in ADR 0007.
 - Student registration/admission policy and how student role claims are provisioned in Supabase.
 - Trusted reviewer identity/access path despite there being no reviewer product role; reviewer assignment, audit trail and review SLA.
 - Rubric criteria, scale, weights, versioning, and provisional-feedback visibility to students.
 - Assessment execution mode/queue, retry and timeout policy, Groq model and structured-output contract.
 - XP rewards and progression values; retention/deletion and under-18 privacy/consent policy.
 - Supabase signing configuration, runtime DB role, RLS user-context strategy, Hyperdrive and deployment credentials.
+
+## Approved Frontend Integration Decisions — 2026-11-25
+
+- [x] React + TypeScript + Vite SPA; no SSR for the authenticated student MVP.
+- [x] React Router for client routing and TanStack Query for API server state; no global state library until a concrete need exists.
+- [x] Supabase JS is used for Auth/session only. Browser product data goes through the backend REST API; no direct Supabase Data API/PostgreSQL access.
+- [x] Backend OpenAPI snapshot is the API contract source. Frontend uses `openapi-typescript` generated path types and `openapi-fetch`; update the mirrored snapshot and generated types in the same frontend PR.
+- [x] Deploy frontend separately as a Cloudflare Worker with Static Assets through the Cloudflare Vite plugin; configure exact `CORS_ORIGINS` on the backend.
+- [x] Product API envelope: `{ success: true, data }` / `{ success: false, error: { code, message } }`; health endpoints are operational exceptions.
+- [x] MVP UI is student-only; no reviewer/admin product interface.
+
+See `docs/adr/0007-student-frontend-openapi-first-architecture.md`.
 
 ## Phase 0 — Foundation
 
@@ -49,9 +60,9 @@
 - [x] Pisahkan app composition (`src/app.ts`) dari Worker entry point (`src/index.ts`).
 - [x] Tambahkan centralized 500 error envelope, request ID, configurable CORS, dan API base `/api/v1`.
 - [x] Pertahankan `/openapi.json` sebagai generated source contract; tambahkan export `docs/openapi.json`.
-- [ ] Review success/error envelope dengan Frontend Lead sebelum endpoint produk pertama.
+- [x] Tetapkan envelope API produk untuk integrasi frontend: `{ success: true, data }` dan `{ success: false, error: { code, message } }`; health endpoints menjadi pengecualian (ADR 0007).
 
-**Acceptance:** semua implemented routes terdokumentasi; kontrak JSON dapat diambil frontend tanpa menyalin schema manual. Central error envelope/request ID/CORS masih perlu difinalkan.
+**Acceptance:** semua implemented routes terdokumentasi; kontrak JSON dapat diambil frontend tanpa menyalin schema manual. Envelope produk telah diputuskan; daftar origin CORS tetap dikonfigurasi per environment.
 **Verification:** OpenAPI generation, typecheck dan schema tests — passed; full HTTP integration tests pending.
 **Dependencies:** Task 0.2. **Scope:** Medium.
 
@@ -60,7 +71,7 @@
 - [x] Worker berjalan lokal menggunakan workerd melalui Wrangler.
 - [x] Drizzle tersambung ke PostgreSQL lokal melalui Hyperdrive local mode.
 - [x] Migration baseline dapat diterapkan ulang dari database kosong dan migrator idempotent.
-- [x] OpenAPI contract tersedia untuk frontend; success/error envelope masih menunggu kesepakatan Frontend Lead.
+- [x] OpenAPI contract dan success/error envelope tersedia untuk integrasi frontend; lihat ADR 0007.
 
 ## Phase 1 — Identity & Discover
 
@@ -207,6 +218,18 @@
 **Acceptance:** frontend dapat mengembangkan API client dan fitur berdasarkan kontrak yang versioned serta dapat direproduksi.
 **Verification:** OpenAPI validator, contoh request smoke tests dan README quick-start review.
 **Dependencies:** Task 0.3 dan route feature yang sudah disetujui. **Scope:** Small/Medium.
+
+### Task 4.3 — Bootstrap frontend repository and typed API boundary
+
+- [ ] Create/confirm the separate frontend repository and deployment ownership.
+- [ ] Scaffold React + TypeScript + Vite with the Cloudflare Vite plugin and Static Assets deployment.
+- [ ] Add React Router, TanStack Query, Supabase Auth client, `openapi-typescript`, and `openapi-fetch`.
+- [ ] Import the reviewed backend OpenAPI snapshot and generate typed API paths/client.
+- [ ] Configure environment-specific API origins and exact backend CORS allowlist.
+
+**Acceptance:** frontend builds and previews on Cloudflare Workers locally; login/session can provide a bearer token to the typed API client; a student-only route can call one protected backend endpoint without direct database access.
+**Verification:** typecheck, unit tests, Worker/Vite build and preview, auth/API smoke tests with a configured Supabase project.
+**Dependencies:** frontend repository and Supabase project/environment values. **Scope:** Medium.
 
 ### Final checkpoint — MVP backend readiness
 
