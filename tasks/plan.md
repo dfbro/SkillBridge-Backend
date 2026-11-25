@@ -89,13 +89,13 @@ Referensi implementasi resmi:
 - API berbentuk REST/JSON dengan base path `/api/v1`; `/health` tetap endpoint publik.
 - `@hono/zod-openapi` menjadi sumber kebenaran kontrak: request, path/query, response, dan error dideskripsikan dengan Zod lalu didaftarkan menggunakan `createRoute` / `app.openapi(...)`.
 - `GET /openapi.json` menyediakan spesifikasi yang dihasilkan dari route definitions, bukan dokumen yang ditulis manual terpisah. Setelah kontrak awal disepakati, sediakan export artefak OpenAPI statis untuk handoff/versi frontend bila diperlukan.
-- Selaraskan response envelope sebelum feature terintegrasi pertama. Usulan TDD: sukses `{ success, data, message }`; error `{ success, error: { code, message, details } }`. Karena dokumen menandainya sebagai usulan, ini perlu disepakati dengan Frontend Lead, bukan dianggap final.
+- **Keputusan envelope (APPROVED):** frontend mengikuti bentuk yang sudah dipakai API produk, yaitu sukses `{ success: true, data }` dan error `{ success: false, error: { code, message } }`. HTTP status tetap sumber kebenaran. `requestId` bersifat metadata diagnostik opsional. Endpoint operasional `/health` dan `/health/database` dikecualikan dari envelope produk.
 - Gunakan UUID untuk resource ID, ISO 8601 UTC untuk timestamp, dan `limit`/`cursor` untuk koleksi yang memerlukan pagination.
 - Endpoint awal mengikuti TDD: `/api/v1/me`, `/api/v1/me/career-goals`, `/api/v1/missions`, `/api/v1/missions/:missionId`, submission, assessment, dashboard, serta recommendations. Semua endpoint aplikasi saat ini beroperasi untuk `student`; tidak ada reviewer/admin endpoint. Mandatory human review sudah diputuskan, tetapi identitas, jalur otorisasi, assignment dan audit reviewer masih TBD.
 
 OpenAPI adalah artefak handoff bagi frontend: developer frontend dapat mengambil `/openapi.json` untuk melihat endpoint, method, auth, request schema, response schema, dan error contract sebelum/selama implementasi UI. Perubahan kontrak harus melalui review bersama Frontend Lead.
 
-**Keputusan integrasi frontend:** backend OpenAPI menjadi satu-satunya sumber kontrak API. Frontend mengikuti REST contract yang sudah tersedia dan menggunakan tipe/client yang dihasilkan dari OpenAPI bila dibutuhkan; jangan memelihara request/response type manual yang menyimpang atau mengakses PostgreSQL/Supabase langsung. Scope UI MVP hanya alur student. Framework, lokasi repository frontend, strategi code generation dan response-envelope sign-off tetap **TBD** sampai repository/Frontend Lead tersedia; jangan menambah stack frontend dari asumsi.
+**Keputusan integrasi frontend (ADR 0007):** gunakan React + TypeScript + Vite sebagai SPA, React Router untuk navigasi, TanStack Query untuk server state, Supabase JS hanya untuk Auth, serta `openapi-typescript` + `openapi-fetch` untuk client API bertipe. Deploy UI sebagai Cloudflare Worker terpisah dengan Static Assets melalui Cloudflare Vite plugin; backend tetap Worker REST API terpisah. Kontrak satu-satunya tetap OpenAPI yang digenerate dari route Zod backend. Frontend menyimpan snapshot OpenAPI yang direview dan memperbarui generated types dalam PR frontend saat kontrak backend berubah. Tidak ada akses browser langsung ke tabel Supabase/PostgreSQL. Scope UI MVP hanya student; reviewer/admin tidak memiliki halaman aplikasi. Detail stack dan alasan tercatat di `docs/adr/0007-student-frontend-openapi-first-architecture.md`.
 
 ## 5. Model data MVP
 
@@ -197,13 +197,13 @@ Hono composition + shared error/auth context + OpenAPI conventions
 | Rubric dan score range belum final | Skema/hasil assessment dapat berubah | Versioning rubric; jangan mengunci bobot/ambang atau menandai AI sebagai final secara sepihak. |
 | Submission file policy | Upload menambah storage dan risiko privasi | MVP telah diputuskan text-only; simpan upload sebagai scope di luar MVP. |
 | Pengguna mungkin berusia di bawah 18 tahun | Risiko privasi dan persetujuan | Data minimization, no public portfolio, retention/deletion dan consent review sebelum pilot. |
-| Response envelope belum disepakati frontend | Integrasi API dapat berubah | Review kontrak dan OpenAPI dengan Frontend Lead sebelum feature slices. |
+| Snapshot OpenAPI frontend tertinggal dari backend | Tipe/request frontend tidak lagi mencerminkan API aktif | Setiap PR backend yang mengubah kontrak wajib mengupdate OpenAPI; frontend menyalin snapshot dan regenerate types dalam PR terpisah. |
 
 ## 9. Keputusan yang masih diperlukan
 
 Keputusan ini tidak menghalangi foundation lokal, tetapi harus dibahas sebelum feature terkait dibuka:
 
-1. **TBD:** Apakah success/error envelope usulan TDD diterima Frontend Lead?
+1. **APPROVED:** Frontend mengikuti envelope API produk yang sudah aktif (`{ success: true, data }` / `{ success: false, error: { code, message } }`); status HTTP authoritative, `requestId` opsional, health endpoints dikecualikan.
 2. **APPROVED:** Role produk MVP hanya `student`. Tidak ada role produk `reviewer` atau `admin`; identitas dan jalur otorisasi manusia yang melakukan review tetap **TBD**. Pendaftaran/kelayakan akun siswa juga **TBD**.
 3. **APPROVED:** Submission MVP text-only. Attachment, upload dan Supabase Storage berada di luar scope.
 4. **APPROVED:** Semua assessment wajib melalui human review sebelum finalisasi. **TBD:** siapa reviewer, bagaimana assignment dan otorisasinya, audit trail, SLA/antrian review, serta apakah feedback provisional boleh terlihat oleh siswa.
@@ -213,6 +213,7 @@ Keputusan ini tidak menghalangi foundation lokal, tetapi harus dibahas sebelum f
 8. **TBD:** Kapan dan berapa XP diberikan; goal bounds, level thresholds, streak bonus/grace dan achievement milestones.
 9. **TBD:** Retention/deletion policy untuk data siswa dan output misi, serta persetujuan/privasi peserta di bawah umur.
 10. **TBD setelah Supabase tersedia:** JWT signing algorithm, assignment `app_metadata.role`, DB runtime role, RLS context strategy, Hyperdrive credentials dan environment.
+11. **APPROVED:** Frontend MVP memakai React + TypeScript + Vite SPA, React Router, TanStack Query, Supabase JS Auth-only, `openapi-typescript` + `openapi-fetch`, dan Cloudflare Workers Static Assets. **TBD:** pembuatan repo GitHub frontend, domain/origin, dan environment credentials.
 
 ## 10. Definition of Done untuk setiap slice
 
@@ -233,6 +234,7 @@ Keputusan ini tidak menghalangi foundation lokal, tetapi harus dibahas sebelum f
 - Dashboard/recommendation implementation intentionally exposes only assessment status/finality flags; assessment scores and feedback remain in the following assessment slice after policy approval.
 - Owner-scoped submission detail and assessment request/status endpoints now record queued runs only; no AI processing or finalization is implied until a processor and scoring/reviewer policy exist.
 - MVP product decisions (2026-11-25): only `student` role, mandatory human review before assessment finalization, and text-only submissions. Student role is allowlisted from verified Supabase `app_metadata`; unsupported explicit roles receive 403.
+- Frontend integration architecture selected in ADR 0007: React/Vite SPA on separate Cloudflare Static Assets Worker, Supabase Auth-only, TanStack Query and generated OpenAPI client; frontend repository has not yet been created.
 - Mandatory review does not create a `reviewer` product role. A separate trusted reviewer identity/access path is an explicit blocker for assessment processing and finalization; queued assessment requests remain request-only until that path, rubric and processor are approved.
 - Learning progression menggunakan policy provisional. XP rewards dan achievement unlock tetap nonaktif sampai product owner menyetujui nilai dan status policy.
 - Dashboard/recommendations serta assessment read/status masih merupakan slice berikutnya.

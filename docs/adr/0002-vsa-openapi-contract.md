@@ -19,7 +19,7 @@ The backend and frontend are developed as separate components. The frontend need
 
 - Frontend can generate clients/types or build against the exported OpenAPI contract without duplicating hand-maintained schema definitions.
 - Contract changes become visible in generated JSON and can be reviewed in pull requests.
-- Success/error envelope conventions still require explicit agreement with the Frontend Lead before being treated as a cross-team contract.
+- The API product response envelope was subsequently approved for frontend integration in [ADR 0007](0007-student-frontend-openapi-first-architecture.md); operational health endpoints remain outside that envelope.
 
 ## Alternatives considered
 
