@@ -1,6 +1,6 @@
 # SkillBridge full setup guide
 
-This guide separates the local backend foundation from the hosted services required for a real login. It does not create a Supabase project, GitHub repository, Cloudflare account resources or production secrets. Values marked `<...>` must come from the project owner/provider dashboard; never commit real values.
+This document records the broader system architecture and unresolved setup decisions. The active development scope is backend-only; frontend implementation and deployment belong to the separate frontend developer. For actionable backend setup and Cloudflare deployment, use [deployment-guide.md](deployment-guide.md). For frontend API consumption, use [api-integration.md](api-integration.md). Values marked `<...>` must come from the project owner/provider dashboard; never commit real values.
 
 ## 0. What runs where
 
@@ -20,7 +20,7 @@ The browser must never use the Supabase Data API or a PostgreSQL connection for 
 - PostgreSQL 18 for local development.
 - A Supabase project for real authentication and hosted PostgreSQL integration.
 - A Cloudflare account for Worker/Hyperdrive deployment.
-- Access to the `dfbro/SkillBridge-Backend` repository. The frontend repository is separate and has not yet been created.
+- Access to the `dfbro/SkillBridge-Backend` repository. The frontend repository and UI implementation are owned by the separate frontend developer.
 
 ## 2. Local backend and PostgreSQL
 
@@ -64,7 +64,7 @@ The checked-in `wrangler.jsonc` contains a placeholder Hyperdrive ID for local d
 
 Create or select the intended Supabase project, then record its project URL and public/publishable key. Configure the Auth site URL and allowed redirect URLs for the local frontend origin and each approved deployed frontend origin. Enable only the sign-in providers and email-confirmation behavior that the product owner approves.
 
-The frontend will need these build-time values:
+The frontend developer will need these build-time values:
 
 ```dotenv
 VITE_SUPABASE_URL=https://<project-ref>.supabase.co
@@ -123,17 +123,9 @@ npm test
 
 The OpenAPI snapshot is `docs/openapi.json`. The product response envelope is `{ success: true, data }` or `{ success: false, error: { code, message } }`; `/health` and `/health/database` are operational exceptions.
 
-## 5. Frontend bootstrap (after its repository is authorized/created)
+## 5. Frontend integration boundary (frontend developer owned)
 
-The selected architecture is documented in [ADR 0007](adr/0007-student-frontend-openapi-first-architecture.md). In the separate frontend repository:
-
-1. Scaffold React + TypeScript + Vite using Cloudflare's official Vite/Workers integration.
-2. Add React Router, TanStack Query, `@supabase/supabase-js`, `openapi-typescript` and `openapi-fetch`.
-3. Copy the reviewed backend `docs/openapi.json` snapshot into the frontend repository and generate the path types. Refresh the snapshot and generated types in the same frontend PR whenever a backend PR changes the contract.
-4. Configure the three `VITE_` variables shown in section 3 for local development. These values are public configuration, not secrets.
-5. Implement the student auth/session provider. Restore the Supabase session on page load, subscribe to auth-state changes, let Supabase handle refresh, and clear TanStack Query's user-scoped cache on sign-out or account switch.
-6. The API client obtains the current access token and adds `Authorization: Bearer <token>` to protected requests. Handle `401` by refreshing/rechecking the session once, then return the user to sign-in; handle `403 ROLE_NOT_ALLOWED` as an account-provisioning/support state, not as a reason to bypass backend authorization.
-7. Implement the Account page using backend `/api/v1/me` and career-goal endpoints. Use Supabase Auth APIs for password reset/change and email-change flows if those options are approved/enabled. Never write auth identity fields through the profile API.
+The selected architecture is documented in [ADR 0007](adr/0007-student-frontend-openapi-first-architecture.md). The frontend developer owns scaffolding, auth/session UX, account UI, client generation and frontend deployment. The backend contract is `docs/openapi.json`; regenerate it with `npm run openapi:export` after route/schema changes. The integration requirements and current route list are in [api-integration.md](api-integration.md).
 
 ### Student account screens and flows
 
