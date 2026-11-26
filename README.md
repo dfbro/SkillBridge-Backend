@@ -21,6 +21,8 @@ Backend API for SkillBridge, built as a Hono modular monolith on Cloudflare Work
 
 ## Local setup
 
+For the complete setup from local PostgreSQL through Supabase Auth, frontend account flows and Cloudflare deployment, follow [`docs/setup-guide.md`](docs/setup-guide.md). The guide marks provider credentials and product policies that still require approval.
+
 1. Install dependencies:
 
    ```sh
@@ -67,7 +69,7 @@ Copy `.env.example` as a reference; never commit real credentials.
 
 Supabase Auth routes intentionally return `503 AUTH_NOT_CONFIGURED` until `SUPABASE_JWKS_URL` and `SUPABASE_ISSUER` are supplied. The auth middleware verifies issuer, `authenticated` audience, signature and expiry. The current implementation assumes an asymmetric signing key/JWKS configuration; legacy HS256 projects need a separately reviewed verification strategy.
 
-The MVP supports one product role: `student`. The backend reads the role only from the verified JWT `app_metadata.role` claim; it never trusts a role in request data or `user_metadata`. A missing role claim defaults to `student` for the current MVP. An explicit unsupported or malformed role is rejected with `403 ROLE_NOT_ALLOWED`. Student registration/admission rules and Supabase claim provisioning remain TBD.
+The MVP supports one product role: `student`. The backend reads the role only from the verified JWT `app_metadata.role` claim; it never trusts a role in request data or `user_metadata`. A missing role claim defaults to `student` for the current MVP. An explicit unsupported or malformed role is rejected with `403 ROLE_NOT_ALLOWED`. Student registration/admission rules and Supabase claim provisioning remain TBD. The frontend account area includes sign-in, sign-out, session restoration, password reset, student profile and career-goal management. Public registration is not enabled until student admission policy is approved. Email change/password change depend on the configured Supabase Auth policy; account deletion remains out of scope pending retention/privacy decisions.
 
 ## API routes
 
@@ -172,6 +174,7 @@ npm run openapi:export
 - `tasks/todo.md` — vertical slices, acceptance criteria and verification checklist.
 - `docs/adr/0006-student-only-text-submissions-mandatory-review.md` — approved MVP product-role, submission and assessment-review boundaries.
 - `docs/adr/0007-student-frontend-openapi-first-architecture.md` — approved student frontend stack and OpenAPI-first integration boundary.
+- `docs/setup-guide.md` — end-to-end local, Supabase Auth, frontend account and Cloudflare setup guide.
 - `src/features/` — feature-owned routes, schemas, services/repositories and tests.
 - `src/shared/` — cross-feature auth, database and HTTP infrastructure only.
 

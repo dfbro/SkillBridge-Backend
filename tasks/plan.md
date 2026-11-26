@@ -97,6 +97,8 @@ OpenAPI adalah artefak handoff bagi frontend: developer frontend dapat mengambil
 
 **Keputusan integrasi frontend (ADR 0007):** gunakan React + TypeScript + Vite sebagai SPA, React Router untuk navigasi, TanStack Query untuk server state, Supabase JS hanya untuk Auth, serta `openapi-typescript` + `openapi-fetch` untuk client API bertipe. Deploy UI sebagai Cloudflare Worker terpisah dengan Static Assets melalui Cloudflare Vite plugin; backend tetap Worker REST API terpisah. Kontrak satu-satunya tetap OpenAPI yang digenerate dari route Zod backend. Frontend menyimpan snapshot OpenAPI yang direview dan memperbarui generated types dalam PR frontend saat kontrak backend berubah. Tidak ada akses browser langsung ke tabel Supabase/PostgreSQL. Scope UI MVP hanya student; reviewer/admin tidak memiliki halaman aplikasi. Detail stack dan alasan tercatat di `docs/adr/0007-student-frontend-openapi-first-architecture.md`.
 
+**Auth dan akun student (APPROVED scope):** frontend menyediakan sign-in, sign-out, session restore/refresh, reset password, dan area akun yang membaca/mengubah profil serta career goals melalui backend. Password/email change hanya melalui Supabase Auth dan hanya jika kebijakan provider mengaktifkannya. Public registration/self-signup belum disetujui; jangan dibuka sebelum admission policy jelas. Account deletion/export dan retensi data tetap TBD. Setup end-to-end ada di `docs/setup-guide.md`.
+
 ## 5. Model data MVP
 
 Model logis mengikuti TDD; nama kolom, constraint final dan rubric policy harus direview sebelum migration pertama.
@@ -214,6 +216,7 @@ Keputusan ini tidak menghalangi foundation lokal, tetapi harus dibahas sebelum f
 9. **TBD:** Retention/deletion policy untuk data siswa dan output misi, serta persetujuan/privasi peserta di bawah umur.
 10. **TBD setelah Supabase tersedia:** JWT signing algorithm, assignment `app_metadata.role`, DB runtime role, RLS context strategy, Hyperdrive credentials dan environment.
 11. **APPROVED:** Frontend MVP memakai React + TypeScript + Vite SPA, React Router, TanStack Query, Supabase JS Auth-only, `openapi-typescript` + `openapi-fetch`, dan Cloudflare Workers Static Assets. **TBD:** pembuatan repo GitHub frontend, domain/origin, dan environment credentials.
+12. **APPROVED scope:** student sign-in/out, session lifecycle, password reset, account/profile and career-goal management. **TBD:** public registration/admission, email/password change policy, account deletion/export and retention.
 
 ## 10. Definition of Done untuk setiap slice
 
