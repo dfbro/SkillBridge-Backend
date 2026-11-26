@@ -21,7 +21,7 @@ Backend API for SkillBridge, built as a Hono modular monolith on Cloudflare Work
 
 ## Local setup
 
-For the complete setup from local PostgreSQL through Supabase Auth, frontend account flows and Cloudflare deployment, follow [`docs/setup-guide.md`](docs/setup-guide.md). The guide marks provider credentials and product policies that still require approval.
+For backend-only setup and deployment, follow [`docs/deployment-guide.md`](docs/deployment-guide.md). For the frontend developer integration contract, see [`docs/api-integration.md`](docs/api-integration.md). The broader architecture and unresolved product decisions remain in [`docs/setup-guide.md`](docs/setup-guide.md).
 
 1. Install dependencies:
 
@@ -145,9 +145,9 @@ npm run openapi:export
 
 This writes `docs/openapi.json`. Regenerate it after changing any route or schema. The document includes HTTP methods, path/query/body parameters, response schemas, tags and the Bearer JWT security scheme.
 
-The backend OpenAPI document is the canonical frontend contract. Frontend code should consume the REST endpoints and derive/generate its API types or client from this document instead of maintaining duplicate request/response definitions or connecting directly to PostgreSQL/Supabase. The MVP frontend scope is student-facing only. The selected frontend stack and integration flow are recorded below and in ADR 0007; the frontend repository itself has not yet been created.
+The backend OpenAPI document is the canonical frontend contract. Frontend code should consume the REST endpoints and derive/generate its API types or client from this document instead of maintaining duplicate request/response definitions or connecting directly to PostgreSQL/Supabase. The MVP frontend scope is student-facing only. The selected architecture boundary is recorded in ADR 0007; the frontend developer owns the separate implementation.
 
-The approved frontend architecture is a React + TypeScript + Vite SPA, with React Router, TanStack Query, Supabase JS for Auth/session only, and `openapi-typescript` + `openapi-fetch` for a typed REST client. Deploy it as a separate Cloudflare Worker with Static Assets using the Cloudflare Vite plugin. Keep a reviewed copy of `docs/openapi.json` in the frontend repository and regenerate its API types whenever a backend contract PR changes the OpenAPI document. Configure `CORS_ORIGINS` to the exact frontend origins. The current product envelope is `{ success: true, data }` for success and `{ success: false, error: { code, message } }` for errors; `/health` and `/health/database` are operational exceptions. See [ADR 0007](docs/adr/0007-student-frontend-openapi-first-architecture.md).
+The frontend is implemented by a separate developer. This repository owns only the backend API and its OpenAPI contract. The frontend developer should consume the committed `docs/openapi.json`, generate a typed client in their own repository, and call this API with a Supabase access token. See [API integration contract](docs/api-integration.md) and [ADR 0007](docs/adr/0007-student-frontend-openapi-first-architecture.md). The current product envelope is `{ success: true, data }` for success and `{ success: false, error: { code, message } }` for errors; `/health` and `/health/database` are operational exceptions.
 
 ## Database workflow
 
@@ -174,7 +174,9 @@ npm run openapi:export
 - `tasks/todo.md` — vertical slices, acceptance criteria and verification checklist.
 - `docs/adr/0006-student-only-text-submissions-mandatory-review.md` — approved MVP product-role, submission and assessment-review boundaries.
 - `docs/adr/0007-student-frontend-openapi-first-architecture.md` — approved student frontend stack and OpenAPI-first integration boundary.
-- `docs/setup-guide.md` — end-to-end local, Supabase Auth, frontend account and Cloudflare setup guide.
+- `docs/setup-guide.md` — architecture, current setup context and unresolved decisions.
+- `docs/deployment-guide.md` — backend-only local setup, Cloudflare/Hyperdrive deployment and production-readiness checks.
+- `docs/api-integration.md` — route inventory, auth contract, error semantics and frontend integration rules.
 - `src/features/` — feature-owned routes, schemas, services/repositories and tests.
 - `src/shared/` — cross-feature auth, database and HTTP infrastructure only.
 
