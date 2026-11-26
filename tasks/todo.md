@@ -27,8 +27,12 @@
 - [x] Deploy frontend separately as a Cloudflare Worker with Static Assets through the Cloudflare Vite plugin; configure exact `CORS_ORIGINS` on the backend.
 - [x] Product API envelope: `{ success: true, data }` / `{ success: false, error: { code, message } }`; health endpoints are operational exceptions.
 - [x] MVP UI is student-only; no reviewer/admin product interface.
+- [x] Student auth/account UI scope: sign-in/out, session restore/refresh, password reset, profile and career-goal management via backend; Auth email/password changes only if provider policy enables them.
+- [ ] Decide student admission: public registration vs invite/school provisioning; do not enable unrestricted signup before decision.
+- [ ] Decide email verification, email/password change policy, account deletion/export and retention/privacy requirements.
 
 See `docs/adr/0007-student-frontend-openapi-first-architecture.md`.
+See `docs/setup-guide.md` for the full local-to-Cloudflare setup sequence.
 
 ## Phase 0 — Foundation
 

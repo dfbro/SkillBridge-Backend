@@ -27,6 +27,10 @@ The backend already exposes a versioned REST API, Supabase JWT authentication, a
 ### 3. Authentication and trust boundaries
 
 - Use `@supabase/supabase-js` for Supabase Auth session lifecycle only.
+- Provide student-facing **sign-in, sign-out, session restoration/refresh, and password-reset** flows. Registration UI is conditional on the still-open student admission policy; do not enable unrestricted public sign-up by assumption.
+- Add an **Account** area with the authenticated student's profile read/update, career-goal management, and account security/session actions. Use `GET/PATCH /api/v1/me` and the existing career-goal endpoints for application profile data; do not confuse Supabase Auth identity fields (email, verified status) with the backend-owned student profile.
+- Password changes and email-change requests, if enabled in the selected Supabase Auth configuration, must use Supabase Auth client APIs—not backend profile PATCH. Email changes must respect Supabase's confirmation flow.
+- Account deletion is not part of the first MVP screen set until retention, legal/privacy and deletion-cascade policy are approved. Never imply that signing out deletes an account.
 - Attach the current Supabase access token as `Authorization: Bearer <token>` on backend API calls; allow the Supabase client to manage refresh.
 - All product data reads/writes go through the SkillBridge backend. The browser must not use Supabase Data API or connect to PostgreSQL for product tables.
 - A client-side route guard is a user-experience convenience only. Backend JWT verification, `student` role enforcement and owner checks remain the security boundary.
@@ -48,13 +52,13 @@ The backend already exposes a versioned REST API, Supabase JWT authentication, a
 
 ## MVP screen scope
 
-1. Sign-in/session handling.
+1. Sign-in, sign-out, restored session and password-reset screens.
 2. Student dashboard and mission recommendations.
 3. Published mission catalogue and mission detail.
 4. Text-only mission submission and the student's own submission history/detail.
 5. Assessment request/status display. `queued` means a request was recorded; it does not mean AI processing has started. Do not display invented scores or final feedback.
 6. Learning preferences, progress, activity and achievements, with provisional reward policy clearly represented as provisional.
-7. Profile and career goals.
+7. Account/profile area: view/edit student profile, career goals, and security actions supported by the configured Supabase Auth policies.
 
 ## Consequences
 
@@ -67,6 +71,8 @@ The backend already exposes a versioned REST API, Supabase JWT authentication, a
 
 - Creation/ownership of the frontend GitHub repository, initial deployment environments, public domains and exact API origins.
 - Supabase project URL/publishable key per environment; sign-in methods, student admission/registration and provisioning of the server-controlled `app_metadata.role` claim.
+- Whether students self-register, use invite-only/onboarding codes, or are provisioned by school staff; email verification and allowed email domains.
+- Whether email change and password change are enabled; account deletion/export policy and data-retention/deletion cascade.
 - Final UI design system, component library, accessibility targets beyond baseline WCAG practices, and visual/product acceptance.
 - Trusted reviewer identity/access, reviewer assignment, audit trail and review SLA/queue. Mandatory human review remains a hard gate before any assessment finalization.
 - Rubric criteria, score scale, weights/versioning, and whether provisional results are visible to students.
