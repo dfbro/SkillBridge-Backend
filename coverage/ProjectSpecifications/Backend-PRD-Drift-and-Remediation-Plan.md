@@ -27,9 +27,11 @@ The three ZIP export blocks in `Documents/` were checked against their correspon
 ### Runtime and deployment
 
 - Alpha Worker is deployed at `https://skillbridge-backend-alpha.epg4tv.workers.dev`.
-- Hyperdrive `c9cfe32a1b9f4aaa8b02fcbd70378bc3` resolves to `skillbridge-alpha-db`, Supabase shared pooler host `aws-0-ap-southeast-2.pooler.supabase.com`, runtime port `6543`, database `postgres`, user `postgres.gzrhbsbjxnspjxyppyjj`.
+- Hyperdrive `c9cfe32a1b9f4aaa8b02fcbd70378bc3` resolves to `skillbridge-alpha-db`, Supabase **Direct connection** host `db.gzrhbsbjxnspjxyppyjj.supabase.co`, port `5432`, database `postgres`, user `postgres`, origin connection limit `20`, caching enabled (60-second max age / 15-second stale-while-revalidate).
 - Supabase migrations `0000` through `0003` were applied successfully through the IPv4 Session Pooler on port `5432`.
 - `/health` and `/health/database` return success. `/openapi.json` is available. `/api/v1/missions` returns HTTP 200 but currently returns an empty list: there are **zero published missions** in Alpha.
+- Hyperdrive originally pointed at Supabase's shared transaction pooler (`:6543`). Direct pooler tests from server-A2 were stable, but Worker-to-Hyperdrive requests intermittently timed out. Cloudflare's Supabase-specific Hyperdrive guide recommends using the **Direct connection** because Hyperdrive itself manages pooling. After changing the Hyperdrive origin to Direct, repeated Alpha tests passed: `/health/database` 10/10 and `/api/v1/missions` 10/10, with 15–231 ms responses. Hyperdrive caching was restored to its original enabled state; the 10/10 checks passed with caching enabled.
+- A temporary published mission plus rubric was inserted to exercise catalog/detail routes, then all three test rows were deleted. Alpha has no remaining smoke mission and still has zero published product missions.
 - CORS middleware and `CORS_ORIGINS` were removed in PR #11 because the active client is native Android. Native HTTP clients do not enforce browser CORS. If a browser client is added later, CORS must be reintroduced with an explicit allowlist.
 
 ### Repository and tests
@@ -52,6 +54,8 @@ The Alpha database currently reports:
 - zero policies exist in `pg_policies` for schema `public`.
 
 Backend queries currently include explicit user ownership filters in the inspected profile, career-goal, submission, assessment, progression, dashboard, and recommendation paths. That is useful application-layer protection, but the current database role bypasses RLS and the database has no RLS policies. This does not satisfy the TDD's least-privilege/RLS defense-in-depth direction and is not acceptable as the final pilot security posture.
+
+A dormant role named `skillbridge_runtime` has been created with `NOSUPERUSER`, `NOBYPASSRLS`, `NOINHERIT`, and table-specific grants. It is currently `NOLOGIN`, has no password set, and is **not** used by Hyperdrive. Hyperdrive still authenticates as `postgres`. The runtime-role cutover remains pending because its credential and final RLS/ownership context strategy must be completed and tested before switching the live binding.
 
 ## 3. PRD feature traceability
 
@@ -224,6 +228,8 @@ After reviewer authorization is decided:
 - [x] Nested career-goal delete auth gap fixed in PR #10 and redeployed to Alpha.
 - [x] CORS removed for native Android in PR #11 and redeployed to Alpha.
 - [x] 17 protected operations return 401 without a token.
+- [x] Hyperdrive Alpha moved from Supabase shared transaction pooler to Direct connection; repeated database health and mission-list checks passed 10/10 with caching enabled.
+- [x] Temporary E2E mission/rubric rows inserted for catalog/detail smoke tests and deleted afterwards.
 - [ ] Full authenticated Alpha E2E — blocked on test account/access token and approved signup policy.
 - [ ] Published mission E2E — blocked on approved pilot mission/rubric seed data.
 - [ ] Assessment/review E2E — blocked on reviewer authorization and missing implementation.
@@ -233,3 +239,8 @@ After reviewer authorization is decided:
 - [ ] CI/CD workflow — not implemented.
 
 This plan is the execution checklist. Update its status after each PR; do not mark a requirement complete based only on a schema, route declaration, or successful health check.
+
+## 9. Additional technical reference checked during execution
+
+- Cloudflare Hyperdrive — Supabase provider guidance (recommends Direct connection because Hyperdrive performs its own pooling): https://developers.cloudflare.com/hyperdrive/examples/connect-to-postgres/postgres-database-providers/supabase/
+- Cloudflare Hyperdrive — connection lifecycle (Worker client connections are cleaned up automatically at invocation end): https://developers.cloudflare.com/hyperdrive/concepts/connection-lifecycle/
