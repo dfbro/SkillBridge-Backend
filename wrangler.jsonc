@@ -4,10 +4,33 @@
   "main": "src/index.ts",
   "compatibility_date": "2026-11-24",
   "compatibility_flags": ["nodejs_compat"],
+  "vars": {
+    "ENVIRONMENT": "production",
+    "SUPABASE_JWKS_URL": "https://REPLACE_WITH_PRODUCTION_PROJECT_REF.supabase.co/auth/v1/.well-known/jwks.json",
+    "SUPABASE_ISSUER": "https://REPLACE_WITH_PRODUCTION_PROJECT_REF.supabase.co/auth/v1",
+    "CORS_ORIGINS": "https://REPLACE_WITH_PRODUCTION_FRONTEND_ORIGIN"
+  },
   "hyperdrive": [
     {
       "binding": "HYPERDRIVE",
       "id": "00000000000000000000000000000000"
     }
-  ]
+  ],
+  "env": {
+    "alpha": {
+      "name": "skillbridge-backend-alpha",
+      "vars": {
+        "ENVIRONMENT": "alpha",
+        "SUPABASE_JWKS_URL": "https://gzrhbsbjxnspjxyppyjj.supabase.co/auth/v1/.well-known/jwks.json",
+        "SUPABASE_ISSUER": "https://gzrhbsbjxnspjxyppyjj.supabase.co/auth/v1",
+        "CORS_ORIGINS": "https://REPLACE_WITH_ALPHA_FRONTEND_ORIGIN"
+      },
+      "hyperdrive": [
+        {
+          "binding": "HYPERDRIVE",
+          "id": "c9cfe32a1b9f4aaa8b02fcbd70378bc3"
+        }
+      ]
+    }
+  }
 }

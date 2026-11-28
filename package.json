@@ -5,7 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "wrangler dev",
-    "deploy": "wrangler deploy",
+    "deploy": "wrangler deploy --env \"\"",
+    "deploy:alpha": "wrangler deploy --env alpha",
+    "deploy:production": "wrangler deploy --env \"\"",
     "cf:typegen": "wrangler types --env-interface CloudflareBindings",
     "check": "tsc --noEmit",
     "db:generate": "drizzle-kit generate",
