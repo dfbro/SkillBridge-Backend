@@ -24,7 +24,7 @@
 - [x] React Router for client routing and TanStack Query for API server state; no global state library until a concrete need exists.
 - [x] Supabase JS is used for Auth/session only. Browser product data goes through the backend REST API; no direct Supabase Data API/PostgreSQL access.
 - [x] Backend OpenAPI snapshot is the API contract source. Frontend uses `openapi-typescript` generated path types and `openapi-fetch`; update the mirrored snapshot and generated types in the same frontend PR.
-- [x] Deploy frontend separately as a Cloudflare Worker with Static Assets through the Cloudflare Vite plugin; configure exact `CORS_ORIGINS` on the backend.
+- [x] Deploy frontend separately as a Cloudflare Worker with Static Assets through the Cloudflare Vite plugin. The current native Android client does not require browser CORS.
 - [x] Product API envelope: `{ success: true, data }` / `{ success: false, error: { code, message } }`; health endpoints are operational exceptions.
 - [x] MVP UI is student-only; no reviewer/admin product interface.
 - [x] Student auth/account UI scope: sign-in/out, session restore/refresh, password reset, profile and career-goal management via backend; Auth email/password changes only if provider policy enables them.

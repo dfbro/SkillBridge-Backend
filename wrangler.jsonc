@@ -7,8 +7,7 @@
   "vars": {
     "ENVIRONMENT": "production",
     "SUPABASE_JWKS_URL": "https://REPLACE_WITH_PRODUCTION_PROJECT_REF.supabase.co/auth/v1/.well-known/jwks.json",
-    "SUPABASE_ISSUER": "https://REPLACE_WITH_PRODUCTION_PROJECT_REF.supabase.co/auth/v1",
-    "CORS_ORIGINS": "https://REPLACE_WITH_PRODUCTION_FRONTEND_ORIGIN"
+    "SUPABASE_ISSUER": "https://REPLACE_WITH_PRODUCTION_PROJECT_REF.supabase.co/auth/v1"
   },
   "hyperdrive": [
     {
@@ -22,8 +21,7 @@
       "vars": {
         "ENVIRONMENT": "alpha",
         "SUPABASE_JWKS_URL": "https://gzrhbsbjxnspjxyppyjj.supabase.co/auth/v1/.well-known/jwks.json",
-        "SUPABASE_ISSUER": "https://gzrhbsbjxnspjxyppyjj.supabase.co/auth/v1",
-        "CORS_ORIGINS": "https://REPLACE_WITH_ALPHA_FRONTEND_ORIGIN"
+        "SUPABASE_ISSUER": "https://gzrhbsbjxnspjxyppyjj.supabase.co/auth/v1"
       },
       "hyperdrive": [
         {

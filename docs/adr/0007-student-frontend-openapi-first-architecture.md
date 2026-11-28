@@ -13,7 +13,7 @@ The backend already exposes a versioned REST API, Supabase JWT authentication, a
 
 - Build a browser-based **React + TypeScript single-page application using Vite**.
 - Deploy it as a separate **Cloudflare Worker with Static Assets**, using the official Cloudflare Vite plugin. Keep the existing backend Worker as the independent REST API deployment.
-- Use `VITE_API_BASE_URL` for the backend origin and configure the backend `CORS_ORIGINS` with exact frontend origins per environment. Do not use legacy Workers Sites.
+- Use the configured API base URL for the native Android client. Browser CORS is not required for native HTTP clients; if a browser-based client is added later, introduce a reviewed origin allowlist. Do not use legacy Workers Sites.
 - Prefer a separate frontend repository (working name: `SkillBridge-Frontend`) so UI releases do not require backend deployments. The remote repository has not been created or verified yet.
 - Do not add SSR or a server-side data layer for the MVP: the application is an authenticated student workspace whose product data and authorization already live behind the backend API.
 
