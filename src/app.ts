@@ -34,15 +34,10 @@ app.use("/api/v1/*", cors({
 }));
 
 app.use("/api/v1/me", requireAuth);
-app.use("/api/v1/me/career-goals", requireAuth);
-app.use("/api/v1/me/submissions", requireAuth);
+// Protect every nested student resource, including parameterized paths such as
+// /me/career-goals/:goalId. Exact-path middleware silently misses those routes.
+app.use("/api/v1/me/*", requireAuth);
 app.use("/api/v1/missions/:missionId/submissions", requireAuth);
-app.use("/api/v1/me/learning-preferences", requireAuth);
-app.use("/api/v1/me/progress", requireAuth);
-app.use("/api/v1/me/activity", requireAuth);
-app.use("/api/v1/me/achievements", requireAuth);
-app.use("/api/v1/me/dashboard", requireAuth);
-app.use("/api/v1/me/recommendations", requireAuth);
 app.use("/api/v1/submissions/:submissionId", requireAuth);
 app.use("/api/v1/submissions/:submissionId/assessment", requireAuth);
 app.use("/api/v1/*", databaseMiddleware);
