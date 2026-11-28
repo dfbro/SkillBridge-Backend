@@ -59,22 +59,48 @@ Before production, validate database authorization carefully. The app uses a sep
 
 Create a Hyperdrive configuration pointing to the intended hosted PostgreSQL endpoint. Use the runtime database role, not the migration owner. Keep the connection string in Cloudflare's secure configuration workflow.
 
-Replace the placeholder Hyperdrive ID in `wrangler.jsonc` with the actual ID for the target environment. Use separate Cloudflare environments/bindings for staging and production where appropriate. Do not commit database credentials or tokens.
+The checked-in `wrangler.jsonc` now has two environments:
+
+| Wrangler target | Worker name | Supabase project | Hyperdrive |
+| --- | --- | --- | --- |
+| `--env alpha` | `skillbridge-backend-alpha` | `gzrhbsbjxnspjxyppyjj` | `c9cfe32a1b9f4aaa8b02fcbd70378bc3` |
+| default (Production) | `skillbridge-backend` | Placeholder | Placeholder (`00000000000000000000000000000000`) |
+
+The Alpha JWKS endpoint was checked from the development server and returned HTTP 200 with an ES256 public key. This confirms the URL is live; it does not prove the Worker can connect to the Alpha database yet.
+
+Replace the Alpha `CORS_ORIGINS` placeholder with the exact frontend Alpha origin before deployment. Production project ref, issuer/JWKS URL, Hyperdrive ID and frontend origin intentionally remain placeholders until the Production resources exist. Never deploy the default environment while those placeholders remain.
 
 Verify that the Cloudflare Worker runtime supports the selected `pg`/Node compatibility configuration and Hyperdrive connection mode. Test connection and query behavior in a non-production environment first.
 
-## 5. Worker configuration and secrets
+## 5. Worker variables and secrets
 
-Set Worker secrets using Wrangler or the Cloudflare dashboard (do not commit values):
+The following values are **plain-text Worker variables, not secrets**. They are already declared under the appropriate `vars` blocks in `wrangler.jsonc`, so Wrangler will keep them version-controlled with the deployment config:
+
+- `ENVIRONMENT`
+- `SUPABASE_JWKS_URL`
+- `SUPABASE_ISSUER`
+- `CORS_ORIGINS`
+
+Bindings and `vars` are not inherited by Wrangler named environments. Each environment must define its own values and Hyperdrive binding. Do not duplicate the same configuration manually in the Dashboard unless deliberately migrating the source of truth away from Wrangler.
+
+Actual secrets (for example a future Groq API key) belong in Cloudflare Worker Secrets, not `vars` or Git. Example for a future Alpha-only secret:
 
 ```sh
-npx wrangler secret put SUPABASE_JWKS_URL
-npx wrangler secret put SUPABASE_ISSUER
+npx wrangler secret put GROQ_API_KEY --env alpha
 ```
 
-Configure `CORS_ORIGINS` as a non-secret environment variable containing the exact, comma-separated frontend origins, for example the local and approved production origin. The current code falls back to wildcard `*` if this value is absent; therefore set it explicitly for every deployed environment. Do not deploy publicly with wildcard CORS.
+Hyperdrive stores the database connection credentials in its own configuration; do not add the PostgreSQL password as a Worker `var` or commit it. Keep Cloudflare API tokens in GitHub Actions secrets when CI/CD is configured.
 
-The current `wrangler.jsonc` contains a placeholder Hyperdrive ID, not a production-ready binding. Configure the real ID before deployment.
+### Wrangler authentication from the remote server
+
+For a remote/headless server, use the device authorization flow so the browser on your own computer does not need to reach a callback server on the remote machine:
+
+```sh
+npx wrangler login --device --browser=false
+npx wrangler whoami
+```
+
+Wrangler prints a Cloudflare device URL and one-time code. Open the URL on your own device, enter/approve the code, and leave the remote command running until it reports successful login. Do not share the resulting local Wrangler credentials.
 
 ## 6. Database migrations
 
@@ -104,11 +130,19 @@ Export OpenAPI and review `docs/openapi.json` as part of any API change. The fro
 
 ## 8. Deploy and verify
 
-After the Hyperdrive ID, secrets, explicit CORS allowlist, DB privileges, JWT settings and migrations have been reviewed:
+After the Hyperdrive ID, required Worker vars, explicit CORS allowlist, DB privileges, JWT settings and migrations have been reviewed, deploy Alpha first:
 
 ```sh
-npm run deploy
+npm run deploy:alpha
 ```
+
+Only after Alpha verification and after all Production placeholders have been replaced, deploy the default Production Worker:
+
+```sh
+npm run deploy:production
+```
+
+The Production scripts explicitly pass `--env ""` because Wrangler warns when a configuration has named environments but a deployment command does not specify its target. This selects the top-level Worker (`skillbridge-backend`) intentionally.
 
 Verify:
 1. `GET /health` returns service status.
