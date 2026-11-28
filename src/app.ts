@@ -101,13 +101,9 @@ const databaseHealthRoute = createRoute({
 
 app.openapi(databaseHealthRoute, async (c) => {
   const connectionString = c.env.HYPERDRIVE.connectionString;
-  const { db, close } = await createDb(connectionString);
-  try {
-    await db.execute(sql`SELECT 1`);
-    return c.json({ status: "ok", database: "reachable" }, 200);
-  } finally {
-    await close();
-  }
+  const db = await createDb(connectionString);
+  await db.execute(sql`SELECT 1`);
+  return c.json({ status: "ok", database: "reachable" }, 200);
 });
 
 app.doc("/openapi.json", {
