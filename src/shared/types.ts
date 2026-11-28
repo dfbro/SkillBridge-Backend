@@ -10,7 +10,7 @@ export type AppEnv = {
   };
   Variables: {
     user: { id: string; role: AppRole };
-    db: Awaited<ReturnType<typeof createDb>>["db"];
+    db: Awaited<ReturnType<typeof createDb>>;
     requestId: string;
   };
 };
