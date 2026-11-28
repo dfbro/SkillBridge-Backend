@@ -100,4 +100,4 @@ Progression values are provisional. While policy status is provisional, effectiv
 4. Treat error codes and HTTP status as authoritative; do not silently retry 403.
 5. Treat `processorConfigured: false` and provisional progression policy literally.
 6. Use the API's timezone-aware progress/activity values rather than recomputing streaks in the browser.
-7. Send requests from an origin explicitly allowed by backend `CORS_ORIGINS`.
+7. The current client is a native Android application and does not use browser CORS. If a browser-based client is introduced later, add an explicit origin allowlist before exposing the API to it.

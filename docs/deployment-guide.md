@@ -39,7 +39,7 @@ Local endpoints:
 - `http://localhost:8787/health/database`
 - `http://localhost:8787/openapi.json`
 
-For real protected-route testing, create/select a Supabase Auth project and configure ignored `.dev.vars` with `SUPABASE_JWKS_URL`, `SUPABASE_ISSUER` and a local `CORS_ORIGINS`. Do not commit `.dev.vars`, `.env` or credentials.
+For real protected-route testing, create/select a Supabase Auth project and configure ignored `.dev.vars` with `SUPABASE_JWKS_URL` and `SUPABASE_ISSUER`. Do not commit `.dev.vars`, `.env` or credentials.
 
 ## 3. Supabase Auth and database prerequisites
 
@@ -68,7 +68,7 @@ The checked-in `wrangler.jsonc` now has two environments:
 
 The Alpha JWKS endpoint was checked from the development server and returned HTTP 200 with an ES256 public key. This confirms the URL is live; it does not prove the Worker can connect to the Alpha database yet.
 
-Replace the Alpha `CORS_ORIGINS` placeholder with the exact frontend Alpha origin before deployment. Production project ref, issuer/JWKS URL, Hyperdrive ID and frontend origin intentionally remain placeholders until the Production resources exist. Never deploy the default environment while those placeholders remain.
+Production project ref, issuer/JWKS URL and Hyperdrive ID intentionally remain placeholders until the Production resources exist. Never deploy the default environment while those placeholders remain.
 
 Verify that the Cloudflare Worker runtime supports the selected `pg`/Node compatibility configuration and Hyperdrive connection mode. Test connection and query behavior in a non-production environment first.
 
@@ -79,7 +79,6 @@ The following values are **plain-text Worker variables, not secrets**. They are 
 - `ENVIRONMENT`
 - `SUPABASE_JWKS_URL`
 - `SUPABASE_ISSUER`
-- `CORS_ORIGINS`
 
 Bindings and `vars` are not inherited by Wrangler named environments. Each environment must define its own values and Hyperdrive binding. Do not duplicate the same configuration manually in the Dashboard unless deliberately migrating the source of truth away from Wrangler.
 
@@ -130,7 +129,7 @@ Export OpenAPI and review `docs/openapi.json` as part of any API change. The fro
 
 ## 8. Deploy and verify
 
-After the Hyperdrive ID, required Worker vars, explicit CORS allowlist, DB privileges, JWT settings and migrations have been reviewed, deploy Alpha first:
+After the Hyperdrive ID, required Worker vars, DB privileges, JWT settings and migrations have been reviewed, deploy Alpha first:
 
 ```sh
 npm run deploy:alpha
@@ -151,14 +150,12 @@ Verify:
 4. Protected `GET /api/v1/me` with a valid student access token succeeds.
 5. Missing/invalid token returns 401; unsupported role returns 403.
 6. Profile and career-goal operations are scoped to the authenticated user.
-7. Requests from an unapproved origin do not receive permissive CORS headers.
 8. Assessment endpoints remain request/status only; no final assessment is implied.
 
 ## 9. Production readiness blockers
 
 Do not treat this repository as production-ready solely because it builds. Before a public production release, explicitly review and test:
 - runtime DB grants and RLS/user-context isolation;
-- wildcard CORS fallback (must be overridden with exact origins);
 - real Hyperdrive ID and secret management;
 - asymmetric Supabase signing/JWKS and trusted student admission/role provisioning;
 - migration rollback/backup and recovery procedure;

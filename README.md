@@ -64,7 +64,6 @@ Copy `.env.example` as a reference; never commit real credentials.
 | `HYPERDRIVE.connectionString` | Runtime connection string supplied by Cloudflare Hyperdrive |
 | `SUPABASE_JWKS_URL` | Supabase project's asymmetric JWT JWKS endpoint |
 | `SUPABASE_ISSUER` | Expected JWT issuer, normally the project's `/auth/v1` issuer URL |
-| `CORS_ORIGINS` | Comma-separated frontend origins allowed by the API; defaults to `*` when unset |
 | `DATABASE_URL` | Migration role connection; defaults to local development DB as `skillbridge_migrator` |
 
 Supabase Auth routes intentionally return `503 AUTH_NOT_CONFIGURED` until `SUPABASE_JWKS_URL` and `SUPABASE_ISSUER` are supplied. The auth middleware verifies issuer, `authenticated` audience, signature and expiry. The current implementation assumes an asymmetric signing key/JWKS configuration; legacy HS256 projects need a separately reviewed verification strategy.

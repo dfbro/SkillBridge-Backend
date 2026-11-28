@@ -1,6 +1,5 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { sql } from "drizzle-orm";
-import { cors } from "hono/cors";
 import { createDb } from "./db";
 import { profilesRoutes } from "./features/profiles/profiles.routes";
 import { careerGoalsRoutes } from "./features/career-goals/career-goals.routes";
@@ -22,17 +21,6 @@ app.use("*", async (c, next) => {
   await next();
   c.header("X-Request-Id", id);
 });
-app.use("/api/v1/*", cors({
-  origin: (origin, c) => {
-    const allowed = c.env.CORS_ORIGINS?.split(",").map((item: string) => item.trim()).filter(Boolean);
-    if (!allowed?.length) return "*";
-    return allowed.includes(origin) ? origin : "";
-  },
-  allowHeaders: ["Authorization", "Content-Type"],
-  allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-  maxAge: 600,
-}));
-
 app.use("/api/v1/me", requireAuth);
 // Protect every nested student resource, including parameterized paths such as
 // /me/career-goals/:goalId. Exact-path middleware silently misses those routes.

@@ -91,12 +91,11 @@ The MVP supports `student` only. The backend reads `app_metadata.role` from the 
 
 ## 4. Run the backend Worker locally
 
-Create/update ignored `.dev.vars` with the Supabase values above and a local CORS origin. Example shape only:
+Create/update ignored `.dev.vars` with the Supabase values above. Example shape only:
 
 ```dotenv
 SUPABASE_JWKS_URL=https://<project-ref>.supabase.co/auth/v1/.well-known/jwks.json
 SUPABASE_ISSUER=https://<project-ref>.supabase.co/auth/v1
-CORS_ORIGINS=http://localhost:5173
 ```
 
 Then run:
@@ -143,11 +142,11 @@ After the Cloudflare account, project ownership, domains and environment plan ar
 
 1. Create a Hyperdrive configuration pointing to the intended Supabase PostgreSQL connection. Store the connection string through Cloudflare's secure configuration flow; do not place it in Git or frontend variables.
 2. Replace the placeholder `hyperdrive.id` in the appropriate Wrangler environment configuration with the real Hyperdrive ID. Keep separate development/staging/production bindings where appropriate.
-3. Configure backend Worker secrets `SUPABASE_JWKS_URL` and `SUPABASE_ISSUER`; configure non-secret `CORS_ORIGINS` with the exact frontend origin(s), not `*` in production.
+3. Configure backend Worker vars `SUPABASE_JWKS_URL` and `SUPABASE_ISSUER`.
 4. Apply reviewed Drizzle migrations to the hosted database using the migration role and a securely supplied `DATABASE_URL`. Never run the local auth fixture against Supabase.
 5. Deploy the backend Worker and verify `/health`, `/health/database`, `/openapi.json`, and a protected route with a valid student token.
 6. Deploy the frontend as a separate Cloudflare Worker with Static Assets. Configure its `VITE_` build values for the matching backend API origin and Supabase project.
-7. Verify sign-in, session refresh, sign-out, profile read/update, owner-scoped submission access and CORS from the deployed frontend origin.
+7. Verify sign-in, session refresh, sign-out, profile read/update and owner-scoped submission access from the deployed Android client.
 
 Do not deploy to production until runtime DB permissions, user-context/RLS strategy, secrets, student admission, privacy/retention, and assessment-review operations are approved and tested.
 
@@ -158,7 +157,6 @@ Do not deploy to production until runtime DB permissions, user-context/RLS strat
 - [ ] Supabase Auth issuer/JWKS match the actual project's asymmetric signing configuration.
 - [ ] Student JWT role is server-controlled; browser cannot choose a role.
 - [ ] Frontend uses Supabase Auth only and backend REST for all product data.
-- [ ] CORS allows only the expected frontend origins.
 - [ ] Sign-in, reset-password, session restoration/refresh and sign-out work.
 - [ ] Account profile and career-goal changes persist through the backend.
 - [ ] Registration remains disabled until admission policy is approved.
